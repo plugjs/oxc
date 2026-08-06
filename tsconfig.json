@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "lib": [ "esnext" ],
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": [ "node" ],
+
+    // Do not emit any files (we only want to type-check)
+    "noEmit": true,
+
+    // ES modules interoperability and preserve import/export statements
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+
+    // Import relative files as "file.ts"
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+
+    // Ultra strict
+    "strict": true,
+    // Implies:
+    // - alwaysStrict
+    // - noImplicitAny
+    // - noImplicitThis
+    // - strictBindCallApply
+    // - strictBuiltinIteratorReturn
+    // - strictFunctionTypes
+    // - strictNullChecks
+    // - strictPropertyInitialization
+    // - useUnknownInCatchVariables
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+  },
+  "include": [
+    "./build.ts",
+    "./src",
+  ],
+}
