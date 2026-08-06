@@ -1,0 +1,56 @@
+{
+  "name": "@plugjs/oxc",
+  "version": "0.0.1",
+  "description": "OXLint and OXFmt support for PlugJS",
+  "keywords": [
+    "build",
+    "compile",
+    "ecmascript",
+    "javascript",
+    "node",
+    "oxc",
+    "oxfmt",
+    "oxlint",
+    "plugjs"
+  ],
+  "homepage": "https://github.com/plugjs/oxc#readme",
+  "bugs": {
+    "url": "https://github.com/plugjs/oxc/issues"
+  },
+  "license": "Apache-2.0",
+  "author": "Juit Developers <developers@juit.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plugjs/oxc.git"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "files": [
+    "*.md",
+    "dist/",
+    "src/"
+  ],
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "plug",
+    "coverage": "plug coverage",
+    "dev": "plug coverage -w src -w test",
+    "lint": "plug lint",
+    "test": "plug test",
+    "transpile": "plug transpile"
+  },
+  "dependencies": {
+    "oxfmt": "^0.62.0",
+    "oxlint": "^1.77.0",
+    "oxlint-tsgolint": "^7.0.2001"
+  },
+  "devDependencies": {
+    "@plugjs/build": "^0.7.1",
+    "@types/node": "<25"
+  },
+  "peerDependencies": {
+    "@plugjs/plug": "^0.7.1"
+  }
+}
