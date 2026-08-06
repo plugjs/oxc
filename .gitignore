@@ -1,0 +1,4 @@
+.coverage-data/
+*.tgz
+coverage/
+node_modules/
