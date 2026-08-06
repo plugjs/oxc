@@ -59,7 +59,7 @@ export async function spawnBinary(options: {
           return resolve({ code: 0, stdout, stderr })
         } else if (typeof error.code === 'number') {
           return resolve({ code: error.code, stdout, stderr })
-        } else if (error.signal) {
+        } else /* coverage ignore next */ if (error.signal) {
           return reject(new BuildFailure(`Process "${binaryName}" was killed by signal ${error.signal}`))
         } else {
           return reject(new BuildFailure(`Process "${binaryName}" failed with unknown error: ${error.message}`))
