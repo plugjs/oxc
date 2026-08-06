@@ -1,14 +1,13 @@
 import { assert, async } from '@plugjs/plug'
 import { $und, $wht, $ylw, ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
 import { resolveAbsolutePath, resolveFile } from '@plugjs/plug/paths'
-import { Context } from '@plugjs/plug/pipe'
 
 import { spawnBinary } from './spawn.ts'
 
 import type { OXLintOptions, OXLintPlugOptions } from './index.ts'
 import type { Files } from '@plugjs/plug/files'
 import type { Report } from '@plugjs/plug/logging'
-import type { Plug } from '@plugjs/plug/pipe'
+import type { Context, Plug } from '@plugjs/plug/pipe'
 
 /* ========================================================================== *
  * TYPES DEFINITION FOR OXLINT JSON FORMAT                                    *
