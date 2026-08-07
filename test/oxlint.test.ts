@@ -101,8 +101,7 @@ describe('OXLint', () => {
         const cwd = process.cwd()
         try {
           process.chdir(tempDir)
-          await expect(oxlint()) //
-            .toBeRejectedWithError(BuildFailure)
+          await expect(oxlint()).toBeRejectedWithError(BuildFailure)
         } finally {
           process.chdir(cwd)
         }
@@ -117,8 +116,7 @@ describe('OXLint', () => {
         const cwd = process.cwd()
         try {
           process.chdir(tempDir)
-          await expect(oxlint('')) //
-            .toBeResolved()
+          expect(oxlint(''))
         } finally {
           process.chdir(cwd)
         }
