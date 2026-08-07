@@ -156,7 +156,7 @@ declare module '@plugjs/plug' {
   }
 }
 
-install('oxfmt', OXC)
+install('oxc', OXC)
 install('oxfmt', OXFmt)
 install('oxlint', OXLint)
 
