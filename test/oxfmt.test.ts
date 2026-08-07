@@ -3,7 +3,7 @@ import { readFile, writeFile } from '@plugjs/plug/fs'
 import { resolveAbsolutePath } from '@plugjs/plug/paths'
 import { Context } from '@plugjs/plug/pipe'
 
-import { OXFmt } from '../src/oxfmt.ts'
+import { oxfmt, OXFmt } from '../src/oxfmt.ts'
 
 import type { AbsolutePath } from '@plugjs/plug'
 import type { OxfmtConfig } from 'oxfmt'
@@ -110,6 +110,34 @@ describe('OXFmt', () => {
 
         const contents = await readFile(resolveAbsolutePath(tempDir, 'resources/warnings.ts'), 'utf-8')
         expect(contents).toEqual("if ((!'foo') in {}) {\n}\nlet warning = true;\n")
+      }))
+  })
+
+  describe('OXFmt Utility', () => {
+    it('should fail with errors', () =>
+      async.runAsync(context, async () => {
+        const cwd = process.cwd()
+        try {
+          process.chdir(tempDir)
+          await expect(oxfmt('')).toBeRejectedWithError(BuildFailure)
+        } finally {
+          process.chdir(cwd)
+        }
+      }))
+
+    it('should succeed with warnings', () =>
+      async.runAsync(context, async () => {
+        await writeConfig({
+          ignorePatterns: ['**/invalid*'],
+        })
+
+        const cwd = process.cwd()
+        try {
+          process.chdir(tempDir)
+          await oxfmt({ warnOnly: true })
+        } finally {
+          process.chdir(cwd)
+        }
       }))
   })
 })
