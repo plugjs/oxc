@@ -128,14 +128,14 @@ describe('OXFmt', () => {
     it('should succeed with warnings', () =>
       async.runAsync(context, async () => {
         await writeConfig({
-          ignorePatterns: ['**/warnings.ts', '**/.*'],
+          ignorePatterns: ['**/warnings.ts', '**/invalid*', '**/.*'],
           semi: false,
         })
 
         const cwd = process.cwd()
         try {
           process.chdir(tempDir)
-          await oxfmt('!**/invalid*')
+          await oxfmt('resources')
         } finally {
           process.chdir(cwd)
         }
