@@ -44,14 +44,31 @@ export class OXC implements Plug<Files> {
  * OXC RUNNER IMPLEMENTATION                                                  *
  * ========================================================================== */
 
-/** Run OXFmt and OXLint using the specified options */
-export async function oxc(options: OXCOptions = {}): Promise<void> {
+/** Run OXLint using defaults */
+export async function oxc(): Promise<void>
+/** Run OXLint using on the specified paths using the default options */
+export async function oxc(...paths: string[]): Promise<void>
+/** Run OXLint using the specified options */
+export async function oxc(options: OXCOptions): Promise<void>
+/* Overload implementation */
+export async function oxc(optionsOrFirstPath: string | OXCOptions = {}, ...additionalPaths: string[]): Promise<void> {
+  const options: OXCOptions = {}
+  const paths: string[] = []
+
+  if (typeof optionsOrFirstPath === 'string') {
+    paths.push(optionsOrFirstPath)
+  } else if (typeof optionsOrFirstPath === 'object') {
+    Object.assign(options, optionsOrFirstPath)
+    paths.push(...(options.paths || []))
+  }
+
+  paths.push(...additionalPaths)
+
   const oxfmtOptions: OXFmtPlugOptions = { ...options }
   const oxlintOptions: OXLintPlugOptions = { ...options }
   oxfmtOptions.config = options.oxfmtConfig
   oxlintOptions.config = options.oxlintConfig
 
-  const paths = options.paths || []
   const context = async.requireContext()
   const report = context.log.report('OXC Report')
   await format(oxfmtOptions, context, report, paths)
