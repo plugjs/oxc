@@ -55,7 +55,7 @@ describe('OXLint', () => {
         await find('**/*', { directory: tempDir }).plug(new OXLint())
       }))
 
-    it('should warn when no files are being linted', () =>
+    it('should fail when no files are being linted', () =>
       async.runAsync(context, async () => {
         await writeConfig(
           {
@@ -64,8 +64,10 @@ describe('OXLint', () => {
           'my-oxlint-config.json',
         )
 
-        await find('**/*', { directory: tempDir }).plug(new OXLint('@/my-oxlint-config.json'))
-        await find('bogus.ts', { directory: tempDir }).plug(new OXLint('')) // empty config
+        await expect(find('**/*', { directory: tempDir }).plug(new OXLint('@/my-oxlint-config.json'))) //
+          .toBeRejectedWithError(BuildFailure)
+        await expect(find('bogus.ts', { directory: tempDir }).plug(new OXLint(''))) //
+          .toBeRejectedWithError(BuildFailure)
       }))
 
     it('should fix issues using a non-standard config files', () =>

@@ -87,7 +87,8 @@ export async function lint(
   paths: string[],
 ): Promise<void> {
   // Extract options with defaults
-  const { config, tsConfig, fix = false, reportUnusedDisableDirectives = true, cwd } = options
+  const { config, tsConfig, fix = false, reportUnusedDisableDirectives = true, cwd: maybeCwd } = options
+  const cwd = context.resolve(maybeCwd || '.')
 
   // Build the command line arguments for OXLint
   const args = ['--format=json', '--type-aware']
@@ -110,10 +111,13 @@ export async function lint(
   const { code, stdout, stderr } = await spawnBinary({
     packageName: 'oxlint',
     context,
-    cwd,
-    args,
     paths,
+    args,
+    cwd,
   })
+
+  // The level of the report is determined by the exit code of OXLint
+  const level = code === 0 ? NOTICE : ERROR
 
   // OXLint might output some non-JSON text before the JSON output, so we need
   // to find the first '{' character and parse from there
@@ -131,7 +135,7 @@ export async function lint(
   // Log any preamble output as warnings
   if (preamble.trim()) {
     preamble.split('\n').forEach((line) => {
-      if (line.trim()) report.add({ level: WARN, message: line.trim() })
+      if (line.trim()) report.add({ level, message: line.trim() })
     })
   }
 
@@ -139,7 +143,7 @@ export async function lint(
   // coverage ignore if
   if (stderr.trim()) {
     stderr.split('\n').forEach((line) => {
-      if (line.trim()) report.add({ level: WARN, message: line.trim() })
+      if (line.trim()) report.add({ level, message: line.trim() })
     })
   }
 
@@ -164,10 +168,7 @@ export async function lint(
   }
 
   // Add a note about the number of files and rules processed
-  report.add({
-    level: NOTICE,
-    message: `Processed ${$ylw(parsed.number_of_files)} file(s)`,
-  })
+  report.add({ level, message: `Processed ${$ylw(parsed.number_of_files)} file(s)` })
 
   // Finally verify the correct exit code
   // coverage ignore if
@@ -199,8 +200,7 @@ export class OXLint implements Plug<Files> {
 
     if (files.length === 0) {
       // No files? No report! (But make it look similar to a normal report)
-      report.add({ level: WARN, message: 'No files found to lint. Please check your paths and ignore patterns.' })
-      report.add({ level: NOTICE, message: `Processed ${$ylw(0)} file(s)` })
+      report.add({ level: ERROR, message: 'No files found to lint. Please check your paths and ignore patterns.' })
     } else {
       // Run OXLint on the files and add the diagnostics to the report
       await lint(this._options, context, report, [...files.absolutePaths()])
