@@ -47,7 +47,7 @@ export async function spawnBinary(options: {
     )
 
     // Spawn the child process
-    execFile(
+    const child = execFile(
       resolved,
       [...args, ...paths],
       {
@@ -60,11 +60,14 @@ export async function spawnBinary(options: {
         } else if (typeof error.code === 'number') {
           return resolve({ code: error.code, stdout, stderr })
         } else /* coverage ignore next */ if (error.signal) {
-          return reject(new BuildFailure(`Process "${binaryName}" was killed by signal ${error.signal}`))
+          return reject(new BuildFailure(`Process "${binaryName}" [${child.pid}] killed by signal ${error.signal}`))
         } else {
-          return reject(new BuildFailure(`Process "${binaryName}" failed with unknown error: ${error.message}`))
+          return reject(new BuildFailure(`Process "${binaryName}" [${child.pid}] failed`, [error]))
         }
       },
     )
+
+    // Log when the child process is spawned
+    child.on('spawn', () => context.log.debug(`Spawned "${$wht(binaryName)}" [${child.pid}]`))
   })
 }
