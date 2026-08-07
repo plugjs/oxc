@@ -24,7 +24,13 @@ export interface OXLintPlugOptions {
 
 /** Options to run _OXLint_ standalone in a task */
 export interface OXLintOptions extends OXLintPlugOptions {
-  /** The list of globs to lint. */
+  /**
+   * The list of paths to lint.
+   *
+   * **NOTE:** Those are _paths_, not matching globs. Specifically, OXLint does
+   * NOT support negative globs (e.g., `!something`) and will fail if you try to
+   * use them.
+   */
   paths?: string[]
 }
 
@@ -47,7 +53,7 @@ export interface OXFmtPlugOptions {
 
 /** Options to run _OXFmt_ standalone in a task */
 export interface OXFmtOptions extends OXFmtPlugOptions {
-  /** The list of globs to format. */
+  /** The list of paths to format. */
   paths?: string[]
 }
 
@@ -63,7 +69,13 @@ export interface OXCPlugOptions extends Omit<OXFmtPlugOptions, 'config'>, Omit<O
 
 /** Options to run both _OXFmt_ and _OXLint_ standalone in a task */
 export interface OXCOptions extends OXCPlugOptions {
-  /** The list of globs to format and lint. */
+  /**
+   * The list of paths to lint.
+   *
+   * **NOTE:** Those are _paths_, not matching globs. Specifically, OXLint does
+   * NOT support negative globs (e.g., `!something`) and will fail if you try to
+   * use them.
+   */
   paths?: string[]
 }
 
