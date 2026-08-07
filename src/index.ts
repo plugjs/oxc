@@ -61,7 +61,7 @@ export interface OXCPlugOptions extends Omit<OXFmtPlugOptions, 'config'>, Omit<O
 }
 
 /** Options to run both _OXFmt_ and _OXLint_ standalone in a task */
-export interface OXCOptions extends OXFmtOptions, OXLintOptions {
+export interface OXCOptions extends OXCPlugOptions {
   /** The list of globs to format and lint. */
   paths?: string[]
 }

@@ -4,10 +4,10 @@ import { resolveAbsolutePath, resolveFile } from '@plugjs/plug/paths'
 
 import { spawnBinary } from './spawn.ts'
 
-import type { OXLintOptions, OXLintPlugOptions } from './index.ts'
 import type { Files } from '@plugjs/plug/files'
 import type { Report } from '@plugjs/plug/logging'
 import type { Context, Plug } from '@plugjs/plug/pipe'
+import type { OXLintOptions, OXLintPlugOptions } from './index.ts'
 
 /* ========================================================================== *
  * TYPES DEFINITION FOR OXLINT JSON FORMAT                                    *
@@ -229,21 +229,26 @@ export class OXLint implements Plug<Files> {
 
 /** Run OXLint using defaults */
 export async function oxlint(): Promise<void>
-/** Run OXLint using the specified configuration file */
-export async function oxlint(configFile: string): Promise<void>
+/** Run OXLint using on the specified paths using the default options */
+export async function oxlint(...paths: string[]): Promise<void>
 /** Run OXLint using the specified options */
 export async function oxlint(options: OXLintOptions): Promise<void>
 /* Overload implementation */
-export async function oxlint(optionsOrConfigFile: string | OXLintOptions = {}): Promise<void> {
-  let options: OXLintOptions
-  let paths: string[]
-  if (typeof optionsOrConfigFile === 'string') {
-    options = { config: optionsOrConfigFile || undefined }
-    paths = []
-  } else {
-    options = optionsOrConfigFile
-    paths = options?.paths || []
+export async function oxlint(
+  optionsOrFirstPath: string | OXLintOptions = {},
+  ...additionalPaths: string[]
+): Promise<void> {
+  const options: OXLintOptions = {}
+  const paths: string[] = []
+
+  if (typeof optionsOrFirstPath === 'string') {
+    paths.push(optionsOrFirstPath)
+  } else if (typeof optionsOrFirstPath === 'object') {
+    Object.assign(options, optionsOrFirstPath)
+    paths.push(...options.paths || [])
   }
+
+  paths.push(...additionalPaths)
 
   const context = async.requireContext()
   const report = context.log.report('OXLint Report')

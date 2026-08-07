@@ -178,21 +178,26 @@ export class OXFmt implements Plug<Files> {
 
 /** Run OXFmt using defaults */
 export async function oxfmt(): Promise<void>
-/** Run OXFmt using the specified configuration file */
-export async function oxfmt(configFile: string): Promise<void>
+/** Run OXFmt using on the specified paths using the default options */
+export async function oxfmt(...paths: string[]): Promise<void>
 /** Run OXFmt using the specified options */
 export async function oxfmt(options: OXFmtOptions): Promise<void>
 /* Overload implementation */
-export async function oxfmt(optionsOrConfigFile: string | OXFmtOptions = {}): Promise<void> {
-  let options: OXFmtOptions
-  let paths: string[]
-  if (typeof optionsOrConfigFile === 'string') {
-    options = { config: optionsOrConfigFile || undefined }
-    paths = []
-  } else {
-    options = optionsOrConfigFile
-    paths = options?.paths || []
+export async function oxfmt(
+  optionsOrFirstPath: string | OXFmtOptions = {},
+  ...additionalPaths: string[]
+): Promise<void> {
+  const options: OXFmtOptions = {}
+  const paths: string[] = []
+
+  if (typeof optionsOrFirstPath === 'string') {
+    paths.push(optionsOrFirstPath)
+  } else if (typeof optionsOrFirstPath === 'object') {
+    Object.assign(options, optionsOrFirstPath)
+    paths.push(...options.paths || [])
   }
+
+  paths.push(...additionalPaths)
 
   const context = async.requireContext()
   const report = context.log.report('OXFmt Report')
