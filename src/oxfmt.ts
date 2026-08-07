@@ -4,11 +4,11 @@ import { resolveAbsolutePath, resolveFile } from '@plugjs/plug/paths'
 
 import { spawnBinary } from './spawn.ts'
 
-import type { OXFmtOptions, OXFmtPlugOptions } from './index.ts'
 import type { Files } from '@plugjs/plug/files'
 import type { Report } from '@plugjs/plug/logging'
 import type { AbsolutePath } from '@plugjs/plug/paths'
 import type { Context, Plug } from '@plugjs/plug/pipe'
+import type { OXFmtOptions, OXFmtPlugOptions } from './index.ts'
 
 /* ========================================================================== *
  * FORMAT FILES                                                               *
@@ -29,7 +29,7 @@ export async function format(
   paths: string[],
 ): Promise<void> {
   // Extract options with defaults
-  const { config, fix = false, warnOnly = false, cwd: maybeCwd } = options
+  const { config, fix = false, warnOnFormat: warnOnly = false, cwd: maybeCwd } = options
   const cwd = context.resolve(maybeCwd || '.')
 
   // Build the command line arguments for OXFmt

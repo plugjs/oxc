@@ -36,10 +36,10 @@ export interface OXFmtPlugOptions {
   /** Whether to automatically fix formatting errors (default: `false`). */
   fix?: boolean
   /**
-   * Wether to report formatting inconsistencies as `WARNING` messages instad
+   * Whether to report formatting inconsistencies as `WARNING` messages instead
    * of `ERROR` messages (default: `false`).
    */
-  warnOnly?: boolean
+  warnOnFormat?: boolean
   /** The current working directory for OXFmt (default: the current one) */
   cwd?: string
 }

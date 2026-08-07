@@ -52,12 +52,12 @@ describe('OXFmt', () => {
           ignorePatterns: ['**/invalid*'],
         })
 
-        await find('**/*', { directory: tempDir }).plug(new OXFmt({ warnOnly: true }))
+        await find('**/*', { directory: tempDir }).plug(new OXFmt({ warnOnFormat: true }))
       }))
 
     it('should fail when warning but parsing errors are found', () =>
       async.runAsync(context, async () => {
-        await expect(find('**/*', { directory: tempDir }).plug(new OXFmt({ warnOnly: true }))) //
+        await expect(find('**/*', { directory: tempDir }).plug(new OXFmt({ warnOnFormat: true }))) //
           .toBeRejectedWithError(BuildFailure)
       }))
 
@@ -134,7 +134,7 @@ describe('OXFmt', () => {
         const cwd = process.cwd()
         try {
           process.chdir(tempDir)
-          await oxfmt({ warnOnly: true })
+          await oxfmt({ warnOnFormat: true })
         } finally {
           process.chdir(cwd)
         }
