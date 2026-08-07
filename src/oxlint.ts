@@ -1,5 +1,5 @@
 import { assert, async } from '@plugjs/plug'
-import { $und, $wht, $ylw, ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
+import { $wht, $ylw, ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
 import { resolveAbsolutePath, resolveFile } from '@plugjs/plug/paths'
 
 import { spawnBinary } from './spawn.ts'
@@ -175,6 +175,16 @@ export async function lint(
   if (code !== 0 && code !== 1) {
     report.add({ level: ERROR, message: `OXLint failed with exit code ${code}` })
   }
+
+  // Final message (should never happen, but just in case)
+  // coverage ignore if
+  if (report.empty) {
+    if (code === 0) {
+      report.add({ level: NOTICE, message: `OXLint found no issues (no diagnostics found)` })
+    } else {
+      report.add({ level: ERROR, message: `OXLint failed with exit code ${code} but no diagnostics were reported` })
+    }
+  }
 }
 
 /* ========================================================================== *
@@ -240,11 +250,6 @@ export async function oxlint(optionsOrConfigFile: string | OXLintOptions = {}): 
   await lint(options, context, report, paths)
 
   // Load the sources for the report and mark it as done
-  // coverage ignore if
-  if (report.empty) {
-    context.log.notice(`${$und($wht('OXLint'))} found no issues (no diagnostics found)`)
-  } else {
-    await report.loadSources()
-    report.done(true)
-  }
+  await report.loadSources()
+  report.done(true)
 }
