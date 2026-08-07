@@ -39,7 +39,7 @@ describe('OXLint', () => {
     it('should succeed with warnings', () =>
       async.runAsync(context, async () => {
         await writeConfig({
-          ignorePatterns: ['**/invalid.js'],
+          ignorePatterns: ['**/invalid*'],
         })
 
         await find('**/*', { directory: tempDir }).plug(new OXLint())
@@ -48,7 +48,7 @@ describe('OXLint', () => {
     it('should succeed with nothing to report', () =>
       async.runAsync(context, async () => {
         await writeConfig({
-          ignorePatterns: ['**/invalid.js'],
+          ignorePatterns: ['**/invalid*', '**/warnings.ts'],
           rules: { 'no-unused-vars': 'off' },
         })
 
@@ -72,7 +72,7 @@ describe('OXLint', () => {
       async.runAsync(context, async () => {
         await writeConfig(
           {
-            ignorePatterns: ['**/invalid.js'],
+            ignorePatterns: ['**/invalid*'],
             rules: { 'no-unsafe-negation': 'error' },
           },
           'my-oxlint-config.json',
@@ -109,7 +109,7 @@ describe('OXLint', () => {
     it('should succeed with warnings', () =>
       async.runAsync(context, async () => {
         await writeConfig({
-          ignorePatterns: ['**/invalid.js'],
+          ignorePatterns: ['**/invalid*'],
         })
 
         const cwd = process.cwd()
