@@ -119,7 +119,7 @@ describe('OXFmt', () => {
         const cwd = process.cwd()
         try {
           process.chdir(tempDir)
-          await expect(oxfmt('')).toBeRejectedWithError(BuildFailure)
+          await expect(oxfmt()).toBeRejectedWithError(BuildFailure)
         } finally {
           process.chdir(cwd)
         }
@@ -128,13 +128,14 @@ describe('OXFmt', () => {
     it('should succeed with warnings', () =>
       async.runAsync(context, async () => {
         await writeConfig({
-          ignorePatterns: ['**/invalid*'],
+          ignorePatterns: ['**/warnings.ts', '**/.*'],
+          semi: false,
         })
 
         const cwd = process.cwd()
         try {
           process.chdir(tempDir)
-          await oxfmt({ warnOnFormat: true })
+          await oxfmt('!**/invalid*')
         } finally {
           process.chdir(cwd)
         }

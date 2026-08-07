@@ -109,14 +109,10 @@ describe('OXLint', () => {
 
     it('should succeed with warnings', () =>
       async.runAsync(context, async () => {
-        await writeConfig({
-          ignorePatterns: ['**/invalid*'],
-        })
-
         const cwd = process.cwd()
         try {
           process.chdir(tempDir)
-          expect(oxlint(''))
+          expect(oxlint('!**/invalid*'))
         } finally {
           process.chdir(cwd)
         }
