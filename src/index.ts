@@ -1,5 +1,6 @@
 import { install } from '@plugjs/plug/pipe'
 
+import { OXFmt } from './oxfmt.ts'
 import { OXLint } from './oxlint.ts'
 
 /* ========================================================================== *
@@ -72,6 +73,32 @@ export interface OXCOptions extends OXFmtOptions, OXLintOptions {
 declare module '@plugjs/plug' {
   export interface Pipe {
     /**
+     * Run {@link https://oxc.rs/docs/guide/usage/formatter.html _OXFmt_} over
+     * the input source files using the configuration defaults (either from a
+     * local `.oxfmtrc.*` file or the default configuration).
+     */
+    oxfmt(): Promise<Pipe>
+
+    /**
+     * Run {@link https://oxc.rs/docs/guide/usage/formatter.html _OXFmt_} over
+     * the input source files, using the configuration from the specified
+     * `configFile`.
+     *
+     * @param configFile The configuration file to use
+     */
+    oxfmt(configFile: string): Promise<Pipe>
+
+    /**
+     * Run {@link https://oxc.rs/docs/guide/usage/formatter.html _OXFmt_} over
+     * the input source files.
+     *
+     * @param options {@link OXFmtPlugOptions | Options} to pass to _OXFmt_
+     */
+    oxfmt(options: OXFmtPlugOptions): Promise<Pipe>
+
+    /* ====================================================================== */
+
+    /**
      * Run {@link https://oxc.rs/docs/guide/usage/linter.html _OXLint_} over
      * the input source files using the configuration defaults (either from a
      * local `.oxlintrc.*` file or the default configuration).
@@ -97,4 +124,9 @@ declare module '@plugjs/plug' {
   }
 }
 
+install('oxfmt', OXFmt)
 install('oxlint', OXLint)
+
+/* Export utility functions */
+export { oxfmt } from './oxfmt.ts'
+export { oxlint } from './oxlint.ts'
