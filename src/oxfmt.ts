@@ -1,10 +1,10 @@
-import { assert } from '@plugjs/plug'
+import { assert, async } from '@plugjs/plug'
 import { $ms, $wht, ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
 import { resolveAbsolutePath, resolveFile } from '@plugjs/plug/paths'
 
 import { spawnBinary } from './spawn.ts'
 
-import type { OXFmtPlugOptions } from './index.ts'
+import type { OXFmtOptions, OXFmtPlugOptions } from './index.ts'
 import type { Files } from '@plugjs/plug/files'
 import type { Report } from '@plugjs/plug/logging'
 import type { AbsolutePath } from '@plugjs/plug/paths'
@@ -170,4 +170,35 @@ export class OXFmt implements Plug<Files> {
     report.done(true)
     return files
   }
+}
+
+/* ========================================================================== *
+ * OXFMT RUNNER IMPLEMENTATION                                                *
+ * ========================================================================== */
+
+/** Run OXFmt using defaults */
+export async function oxfmt(): Promise<void>
+/** Run OXFmt using the specified configuration file */
+export async function oxfmt(configFile: string): Promise<void>
+/** Run OXFmt using the specified options */
+export async function oxfmt(options: OXFmtOptions): Promise<void>
+/* Overload implementation */
+export async function oxfmt(optionsOrConfigFile: string | OXFmtOptions = {}): Promise<void> {
+  let options: OXFmtOptions
+  let paths: string[]
+  if (typeof optionsOrConfigFile === 'string') {
+    options = { config: optionsOrConfigFile || undefined }
+    paths = []
+  } else {
+    options = optionsOrConfigFile
+    paths = options?.paths || []
+  }
+
+  const context = async.requireContext()
+  const report = context.log.report('OXFmt Report')
+  await format(options, context, report, paths)
+
+  // Load the sources for the report and mark it as done
+  await report.loadSources()
+  report.done(true)
 }
