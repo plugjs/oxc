@@ -112,7 +112,7 @@ describe('OXLint', () => {
         const cwd = process.cwd()
         try {
           process.chdir(tempDir)
-          expect(oxlint('!**/invalid*'))
+          await oxlint('!**/invalid*')
         } finally {
           process.chdir(cwd)
         }
