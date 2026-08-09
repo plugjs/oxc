@@ -1,2 +1,3 @@
-if (!'foo' in {}) {}
+if ((!"foo") in {}) {
+}
 let warning = true;

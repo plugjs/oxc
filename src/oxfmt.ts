@@ -123,7 +123,10 @@ export async function format(
     // messages, we'll add them to the report as well here...
     else if ((result = line.match(/^\S.*$/)) != null) {
       const message = result[0]?.trim()
-      if (message) report.add({ level, message, tags: ['oxfmt'] })
+      if (message) {
+        report.add({ level, message, tags: ['oxfmt'] })
+        report.add({ level, message: Buffer.from(message).toString('hex'), tags: ['oxfmt-debug'] })
+      }
     }
   })
 
