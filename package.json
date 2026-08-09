@@ -32,7 +32,26 @@
     "src/"
   ],
   "type": "module",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./configs/oxfmt": {
+      "types": "./dist/configs/oxfmt.d.ts",
+      "default": "./dist/configs/oxfmt.js"
+    },
+    "./configs/oxlint": {
+      "types": "./dist/configs/oxlint.d.ts",
+      "default": "./dist/configs/oxlint.js"
+    },
+    "./configs/oxlint.node": {
+      "types": "./dist/configs/oxlint.node.d.ts",
+      "default": "./dist/configs/oxlint.node.js"
+    }
+  },
   "scripts": {
     "build": "plug",
     "coverage": "plug coverage",
