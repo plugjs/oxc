@@ -1,10 +1,15 @@
+// ===== BASE CONFIGURATION ====================================================
+// This is the base configuration for the TypeScript compiler. It declares our
+// overall preferences for the TypeScript compiler, and is extended by the two
+// specific configurations for sources and tests.
 {
   "compilerOptions": {
-    "lib": [ "esnext" ],
+    // This project is a "very modern" NodeJS project
+    "lib": ["esnext"],
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": [ "node" ],
+    "types": ["node"],
 
     // Do not emit any files (we only want to type-check)
     "noEmit": true,
@@ -13,7 +18,7 @@
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
 
-    // Import relative files as "file.ts"
+    // Import relative files as "file.ts" and rewrite them in the output
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
 
@@ -37,10 +42,8 @@
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedParameters": true
   },
-  "include": [
-    "./build.ts",
-    "./src",
-  ],
+  // Include only the local (config and build) files...
+  "include": ["*.ts"]
 }
