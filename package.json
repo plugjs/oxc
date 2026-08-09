@@ -48,8 +48,10 @@
     "oxlint-tsgolint": "^7.0.2001"
   },
   "devDependencies": {
-    "@plugjs/build": "^0.7.1",
-    "@types/node": "<25"
+    "@plugjs/cov8": "^0.7.1",
+    "@plugjs/expect5": "^0.7.1",
+    "@plugjs/plug": "^0.7.1",
+    "@plugjs/typescript": "^0.7.1"
   },
   "peerDependencies": {
     "@plugjs/plug": "^0.7.1"
