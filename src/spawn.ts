@@ -1,9 +1,10 @@
 import { execFile } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { findPackageJSON } from 'node:module'
+import { delimiter } from 'node:path'
 
 import { $p, $wht, assert, BuildFailure } from '@plugjs/plug'
-import { assertAbsolutePath, resolveFile } from '@plugjs/plug/paths'
+import { assertAbsolutePath, resolveDirectory, resolveFile } from '@plugjs/plug/paths'
 
 import type { Context } from '@plugjs/plug/pipe'
 
@@ -38,6 +39,11 @@ export async function spawnBinary(options: {
   const resolved = resolveFile(packageFile, '..', binaryFile)
   assert(resolved, `Could not resolve path to "${binaryName}" executable in package "${packageName}"`)
 
+  // Make sure any companion binaries from this package's dependency tree are
+  // available to the spawned process.
+  const packageBinDir = resolveDirectory(packageFile, '..', '..', '.bin')
+  const PATH = [packageBinDir, process.env['PATH']].filter(Boolean).join(delimiter)
+
   return new Promise<{ code: number; stdout: string; stderr: string }>((resolve, reject) => {
     context.log.info(
       `Spawning "${$wht(binaryName)}" from "${$p(resolved)}" with args:`,
@@ -50,7 +56,7 @@ export async function spawnBinary(options: {
       resolved,
       [...args, ...paths],
       {
-        env: { PATH: process.env['PATH'] }, // zero out the environment
+        env: { ...process.env, PATH },
         cwd: context.resolve(cwd), // use the specified working directory
       },
       (error, stdout, stderr) => {
