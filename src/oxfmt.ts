@@ -1,14 +1,14 @@
 import { assert, async } from '@plugjs/plug'
-import { $ms, $wht, ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
+import { ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
 import { resolveAbsolutePath, resolveFile } from '@plugjs/plug/paths'
 
 import { spawnBinary } from './spawn.ts'
 
+import type { OXFmtOptions, OXFmtPlugOptions } from './index.ts'
 import type { Files } from '@plugjs/plug/files'
 import type { Report } from '@plugjs/plug/logging'
 import type { AbsolutePath } from '@plugjs/plug/paths'
 import type { Context, Plug } from '@plugjs/plug/pipe'
-import type { OXFmtOptions, OXFmtPlugOptions } from './index.ts'
 
 /* ========================================================================== *
  * FORMAT FILES                                                               *
@@ -38,7 +38,7 @@ export async function format(
   if (config) {
     const resolved = context.resolve(config)
     const file = resolveFile(resolved)
-    assert(file, `OXFmt config file not found: ${$wht(resolved)}`)
+    assert(file, `OXFmt config file not found: "${resolved}"`)
     args.push(`--config=${file}`)
   }
 
@@ -64,7 +64,7 @@ export async function format(
   if (fix) {
     stdout.split('\n').forEach((line) => {
       const message = line.trim()
-      if (message) report.add({ level, message })
+      if (message) report.add({ level, message, tags: ['oxfmt'] })
     })
   } else {
     stdout.split('\n').forEach((line) => {
@@ -123,16 +123,16 @@ export async function format(
     // messages, we'll add them to the report as well here...
     else if ((result = line.match(/^\S.*$/)) != null) {
       const message = result[0]?.trim()
-      if (message) report.add({ level, message })
+      if (message) report.add({ level, message, tags: ['oxfmt'] })
     }
   })
 
   // Finally verify the correct exit code
   // coverage ignore if
   if (code !== 0 && code !== 1 && code !== 2) {
-    report.add({ level: ERROR, message: `OXFmt failed with exit code ${code}` })
+    report.add({ level: ERROR, message: `OXFmt failed with exit code ${code}`, tags: ['oxfmt'] })
   } else if (report.empty) {
-    report.add({ level, message: `OXFmt formatting complete ${$ms(duration)}` })
+    report.add({ level, message: `OXFmt formatting complete ${duration} ms`, tags: ['oxfmt'] })
   }
 }
 
@@ -159,7 +159,11 @@ export class OXFmt implements Plug<Files> {
 
     if (files.length === 0) {
       // No files? No report! (But make it look similar to a normal report)
-      report.add({ level: ERROR, message: 'No files found to format. Please check your paths and ignore patterns.' })
+      report.add({
+        level: ERROR,
+        message: 'No files found to format. Please check your paths and ignore patterns.',
+        tags: ['oxfmt'],
+      })
     } else {
       // Run OXFmt on the files and add the diagnostics to the report
       await format(this._options, context, report, [...files.absolutePaths()])
@@ -194,7 +198,7 @@ export async function oxfmt(
     paths.push(optionsOrFirstPath)
   } else if (typeof optionsOrFirstPath === 'object') {
     Object.assign(options, optionsOrFirstPath)
-    paths.push(...options.paths || [])
+    paths.push(...(options.paths || []))
   }
 
   paths.push(...additionalPaths)

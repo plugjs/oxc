@@ -1,13 +1,13 @@
 import { assert, async } from '@plugjs/plug'
-import { $wht, $ylw, ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
+import { ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
 import { resolveAbsolutePath, resolveFile } from '@plugjs/plug/paths'
 
 import { spawnBinary } from './spawn.ts'
 
+import type { OXLintOptions, OXLintPlugOptions } from './index.ts'
 import type { Files } from '@plugjs/plug/files'
 import type { Report } from '@plugjs/plug/logging'
 import type { Context, Plug } from '@plugjs/plug/pipe'
-import type { OXLintOptions, OXLintPlugOptions } from './index.ts'
 
 /* ========================================================================== *
  * TYPES DEFINITION FOR OXLINT JSON FORMAT                                    *
@@ -95,19 +95,20 @@ export async function lint(
   if (config) {
     const resolved = context.resolve(config)
     const file = resolveFile(resolved)
-    assert(file, `OXLint config file not found: ${$wht(resolved)}`)
+    assert(file, `OXLint config file not found: "${resolved}"`)
     args.push(`--config=${file}`)
   }
   if (tsConfig) {
     const resolved = context.resolve(tsConfig)
     const file = resolveFile(resolved)
-    assert(file, `OXLint TypeScript config file not found: ${$wht(resolved)}`)
+    assert(file, `OXLint TypeScript config file not found: "${resolved}"`)
     args.push(`--tsconfig=${file}`)
   }
   if (reportUnusedDisableDirectives) args.push(`--report-unused-disable-directives`)
   if (fix) args.push(`--fix`)
 
   // Spawn the OXLint binary and capture the output
+  const start = Date.now()
   const { code, stdout, stderr } = await spawnBinary({
     packageName: 'oxlint',
     context,
@@ -115,6 +116,7 @@ export async function lint(
     args,
     cwd,
   })
+  const duration = Date.now() - start
 
   // The level of the report is determined by the exit code of OXLint
   const level = code === 0 ? NOTICE : ERROR
@@ -135,7 +137,7 @@ export async function lint(
   // Log any preamble output as warnings
   if (preamble.trim()) {
     preamble.split('\n').forEach((line) => {
-      if (line.trim()) report.add({ level, message: line.trim() })
+      if (line.trim()) report.add({ level, message: line.trim(), tags: ['oxlint'] })
     })
   }
 
@@ -143,7 +145,7 @@ export async function lint(
   // coverage ignore if
   if (stderr.trim()) {
     stderr.split('\n').forEach((line) => {
-      if (line.trim()) report.add({ level, message: line.trim() })
+      if (line.trim()) report.add({ level, message: line.trim(), tags: ['oxlint'] })
     })
   }
 
@@ -168,12 +170,17 @@ export async function lint(
   }
 
   // Add a note about the number of files and rules processed
-  report.add({ level, message: `Processed ${$ylw(parsed.number_of_files)} file(s)` })
+  const files = parsed.number_of_files === 1 ? `file` : `files`
+  report.add({
+    level,
+    message: `Finished in ${duration}ms on ${parsed.number_of_files} ${files} using ${parsed.threads_count} threads.`,
+    tags: ['oxlint'],
+  })
 
   // Finally verify the correct exit code
   // coverage ignore if
   if (code !== 0 && code !== 1) {
-    report.add({ level: ERROR, message: `OXLint failed with exit code ${code}` })
+    report.add({ level: ERROR, message: `OXLint failed with exit code ${code}`, tags: ['oxlint'] })
   }
 
   // Final message (should never happen, but just in case)
@@ -245,7 +252,7 @@ export async function oxlint(
     paths.push(optionsOrFirstPath)
   } else if (typeof optionsOrFirstPath === 'object') {
     Object.assign(options, optionsOrFirstPath)
-    paths.push(...options.paths || [])
+    paths.push(...(options.paths || []))
   }
 
   paths.push(...additionalPaths)
