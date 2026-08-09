@@ -30,13 +30,13 @@ export default defineConfig({
   // Sort imports in JS/TS files, including type imports
   sortImports: {
     groups: [
-      'builtin',
-      'external',
+      ['builtin'],
+      ['external'],
       ['internal', 'subpath'],
       ['parent', 'sibling', 'index'],
-      'style',
-      'type',
-      'unknown',
+      ['style'],
+      ['type'],
+      ['unknown'],
     ],
     newlinesBetween: true,
   },

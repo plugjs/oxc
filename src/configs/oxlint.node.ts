@@ -3,7 +3,7 @@
 
 import { defineConfig } from 'oxlint'
 
-import config from './oxlint.base.ts'
+import config from './oxlint.ts'
 
 export default defineConfig({
   extends: [config],

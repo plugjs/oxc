@@ -3,7 +3,7 @@
 
 import { defineConfig } from 'oxfmt'
 
-import config from './src/configs/oxfmt.base.ts'
+import config from './src/configs/oxfmt.ts'
 
 export default defineConfig({
   ...config,
