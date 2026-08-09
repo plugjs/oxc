@@ -14,7 +14,6 @@ export async function spawnBinary(options: {
   args?: string[]
   paths?: string[]
   cwd?: string
-  ignoreStderr?: boolean
 }): Promise<{ code: number; stdout: string; stderr: string }> {
   const {
     context, // the context for logging

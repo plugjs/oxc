@@ -56,7 +56,7 @@ export default plugjs({
   /** Default task: transpile, test and lint */
   async default(): Promise<void> {
     await this.transpile()
-    await this.test()
+    await this.coverage()
     await this.lint()
   },
 })

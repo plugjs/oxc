@@ -152,9 +152,7 @@ export async function lint(
   // Add the diagnostics to the report
   for (const diagnostic of parsed.diagnostics || /* coverage ignore next */ []) {
     report.add({
-      file: diagnostic.filename
-        ? resolveAbsolutePath(context.buildDir, diagnostic.filename)
-        : /* coverage ignore next */ undefined,
+      file: diagnostic.filename ? resolveAbsolutePath(cwd, diagnostic.filename) : /* coverage ignore next */ undefined,
       message: diagnostic.message || /* coverage ignore next */ 'Unknown error',
       tags: diagnostic.code || undefined,
       column: diagnostic.labels?.[0]?.span?.column,
