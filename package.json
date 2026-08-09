@@ -38,6 +38,7 @@
     "coverage": "plug coverage",
     "dev": "plug coverage -w src -w test",
     "lint": "plug lint",
+    "lintfix": "plug lint fix=true",
     "test": "plug test",
     "transpile": "plug transpile"
   },
