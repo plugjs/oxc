@@ -19,9 +19,10 @@ export default plugjs({
   /** Run all tests */
   async test(): Promise<void> {
     banner('Running Tests')
+    await rmrf('.coverage-data') // wipe existing coverage data
     await tsc('test/tsconfig.json', { noEmit: true }) // type check our tests
     await find('**/*.test.*', { directory: 'test' }) // find all our test files
-      .test({ coverageDir: '.coverage-data' }) // run tests collecting coverage
+      .test({ coverageDir: '.coverage-data', summary: true }) // run tests
   },
 
   /** Run tests capturing errors, but always producing coverage */
