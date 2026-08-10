@@ -5,6 +5,7 @@ import { delimiter } from 'node:path'
 
 import { $p, $wht, assert, BuildFailure } from '@plugjs/plug'
 import { assertAbsolutePath, resolveDirectory, resolveFile } from '@plugjs/plug/paths'
+import stripansi from 'strip-ansi'
 
 import type { AbsolutePath } from '@plugjs/plug/paths'
 import type { Context } from '@plugjs/plug/pipe'
@@ -59,9 +60,9 @@ export async function spawnBinary(options: {
       { env: { ...process.env, PATH }, cwd: cwd },
       (error, stdout, stderr) => {
         if (!error) {
-          return resolve({ code: 0, stdout, stderr })
+          return resolve({ code: 0, stdout: stripansi(stdout), stderr: stripansi(stderr) })
         } else if (typeof error.code === 'number') {
-          return resolve({ code: error.code, stdout, stderr })
+          return resolve({ code: error.code, stdout: stripansi(stdout), stderr: stripansi(stderr) })
         } else /* coverage ignore next */ if (error.signal) {
           return reject(new BuildFailure(`Process "${binaryName}" [${child.pid}] killed by signal ${error.signal}`))
         } else {
