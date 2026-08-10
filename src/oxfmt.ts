@@ -1,6 +1,6 @@
 import { assert, async } from '@plugjs/plug'
 import { ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
-import { resolveAbsolutePath, resolveFile } from '@plugjs/plug/paths'
+import { resolveAbsolutePath, resolveFile, resolveRelativeChildPath } from '@plugjs/plug/paths'
 
 import { spawnBinary } from './spawn.ts'
 
@@ -29,7 +29,7 @@ export async function format(
   paths: string[],
 ): Promise<void> {
   // Extract options with defaults
-  const { config, fix = false, warnOnFormat: warnOnly = false, cwd: maybeCwd } = options
+  const { config, fix = false, warnOnFormat = false, cwd: maybeCwd } = options
   const cwd = context.resolve(maybeCwd || '.')
 
   // Build the command line arguments for OXFmt
@@ -39,7 +39,15 @@ export async function format(
     const resolved = context.resolve(config)
     const file = resolveFile(resolved)
     assert(file, `OXFmt config file not found: "${resolved}"`)
-    args.push(`--config=${file}`)
+
+    // There is a bug in OXFmt whereas, if the config file is specified as an
+    // absolute path, it will mess up the resolution of the ignore patterns,
+    // so we have to _relativize_ the config file path to the current working
+    // directory
+    const relative = resolveRelativeChildPath(cwd, file)
+
+    // Push the config file argument to the command line arguments
+    args.push(`--config=${relative || file}`)
   }
 
   // Spawn the OXFmt binary and capture the output
@@ -57,14 +65,18 @@ export async function format(
   // - 0: All files are well formatted
   // - 1: Some files are not well formatted (WARN or ERROR, can be fixed)
   // - 2: Some files could not be parsed or no files were found
-  const level = code === 0 ? NOTICE : code === 1 ? (warnOnly ? WARN : ERROR) : ERROR
+  const level = code === 0 ? NOTICE : code === 1 ? (warnOnFormat ? WARN : ERROR) : ERROR
 
   // When `--list-different` (not fixing) OXFmt outputs the list of different
   // files to STDOUT and error/warning messages to STDERR...
+  let hasMessages = false
   if (fix) {
     stdout.split('\n').forEach((line) => {
       const message = line.trim()
-      if (message) report.add({ level, message, tags: ['oxfmt'] })
+      if (!message) return
+
+      report.add({ level, message, tags: ['oxfmt'] })
+      hasMessages = true
     })
   } else {
     stdout.split('\n').forEach((line) => {
@@ -125,7 +137,7 @@ export async function format(
       const message = result[0]?.trim()
       if (message) {
         report.add({ level, message, tags: ['oxfmt'] })
-        report.add({ level, message: Buffer.from(message).toString('hex'), tags: ['oxfmt-debug'] })
+        hasMessages = true
       }
     }
   })
@@ -134,7 +146,7 @@ export async function format(
   // coverage ignore if
   if (code !== 0 && code !== 1 && code !== 2) {
     report.add({ level: ERROR, message: `OXFmt failed with exit code ${code}`, tags: ['oxfmt'] })
-  } else if (report.empty) {
+  } else if (report.empty || !hasMessages) {
     report.add({ level, message: `OXFmt formatting complete ${duration} ms`, tags: ['oxfmt'] })
   }
 }
