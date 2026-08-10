@@ -5,6 +5,8 @@ import { defineConfig } from 'oxfmt'
 
 import config from './src/configs/oxfmt.ts'
 
+console.log('IMPORTED AT', new Date().toISOString())
+
 export default defineConfig({
   ...config,
   ignorePatterns: [...config.ignorePatterns, 'test/resources'],

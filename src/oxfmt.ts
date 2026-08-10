@@ -103,19 +103,22 @@ export async function format(
   //    +----
   //   help: Try inserting a semicolon here
   // Error occurred when checking code style in the above files.
+  //
+  // Even more hairy is the fact that on *SOME* linux distros, the delimiters
+  // are unicode characters (see the regex below)...
 
   let message: string | undefined = undefined
   stderr.split('\n').forEach((line) => {
     let result: RegExpMatchArray | null
     // Lines starting with "  x ..." contain the error message, before the
     // line and file information... Let's store this and we'll pass
-    if ((result = line.match(/^\s+x\s+(.*)/)) != null) {
+    if ((result = line.match(/^\s+[x\u0078]\s+(.*)/)) != null) {
       message = result[1]?.trim()
     }
 
     // Lines starting with "  ,-[" contain the file and line information, which
     // we can parse and add to the report along with the message we stored above
-    else if ((result = line.match(/^\s+,-\[([^\]]+)\]/)) != null) {
+    else if ((result = line.match(/^\s+[,\u256d][-\u2500]\[([^\]]+)\]/)) != null) {
       const info = result[1]!.trim()
       let file: AbsolutePath | undefined = undefined
       let line: number | undefined = undefined
