@@ -6,6 +6,7 @@ import { delimiter } from 'node:path'
 import { $p, $wht, assert, BuildFailure } from '@plugjs/plug'
 import { assertAbsolutePath, resolveDirectory, resolveFile } from '@plugjs/plug/paths'
 
+import type { AbsolutePath } from '@plugjs/plug/paths'
 import type { Context } from '@plugjs/plug/pipe'
 
 export async function spawnBinary(options: {
@@ -14,7 +15,7 @@ export async function spawnBinary(options: {
   binaryName?: string
   args?: string[]
   paths?: string[]
-  cwd?: string
+  cwd: AbsolutePath
 }): Promise<{ code: number; stdout: string; stderr: string }> {
   const {
     context, // the context for logging
@@ -22,7 +23,7 @@ export async function spawnBinary(options: {
     binaryName = packageName, // the binary in the package (defaults to same)
     args = [], // arguments to pass to the binary (and logged)
     paths = [], // the list of file paths to pass to the binary (not logged)
-    cwd = '.', // current working directory for the binary (defaults to current)
+    cwd, // current working directory for the binary
   } = options
 
   // Find the package.json for the specified package
@@ -55,10 +56,7 @@ export async function spawnBinary(options: {
     const child = execFile(
       resolved,
       [...args, ...paths],
-      {
-        env: { ...process.env, PATH },
-        cwd: context.resolve(cwd), // use the specified working directory
-      },
+      { env: { ...process.env, PATH }, cwd: cwd },
       (error, stdout, stderr) => {
         if (!error) {
           return resolve({ code: 0, stdout, stderr })
