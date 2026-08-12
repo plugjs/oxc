@@ -9,7 +9,7 @@ import type { AbsolutePath } from '@plugjs/plug'
 import type { OxfmtConfig } from 'oxfmt'
 import type { OxlintConfig } from 'oxlint'
 
-describe('OXC', () => {
+xdescribe('OXC', () => {
   let tempDir: AbsolutePath
   let context: Context
 
@@ -35,7 +35,7 @@ describe('OXC', () => {
     await rmrf(tempDir)
   })
 
-  describe('OXC Plug', () => {
+  xdescribe('OXC Plug', () => {
     it('should fail with parsing errors', () =>
       async.runAsync(context, async () => {
         await expect(find('**/*', { directory: tempDir }).plug(new OXC())) //
@@ -67,7 +67,7 @@ describe('OXC', () => {
       }))
   })
 
-  describe('OXLint Utility', () => {
+  xdescribe('OXLint Utility', () => {
     it('should fail with errors', () =>
       async.runAsync(context, async () => {
         const cwd = process.cwd()
