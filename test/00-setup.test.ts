@@ -7,3 +7,7 @@ import { logOptions } from '@plugjs/plug/logging'
 const annotationsEnabled: boolean = logOptions.githubAnnotations
 beforeEach(() => (logOptions.githubAnnotations = false))
 afterEach(() => (logOptions.githubAnnotations = annotationsEnabled))
+
+// Make sure we don't accidentally parse *OUR* configurations while running
+beforeAll(() => (process.env['__DISABLE_CONFIGS__'] = 'true'))
+afterAll(() => delete process.env['__DISABLE_CONFIGS__'])
