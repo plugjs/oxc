@@ -73,13 +73,13 @@ describe('OXC', () => {
         ).toBeRejectedWithError(BuildFailure)
       }))
 
-    it('should fail when no files files are found', () =>
+    it('should fail when no files are found', () =>
       async.runAsync(context, async () => {
         await expect(find('**/bozo.ts', { directory: tempDir }).plug(new OXC())).toBeRejectedWithError(BuildFailure)
       }))
   })
 
-  describe('OXLint Utility', () => {
+  describe('OXC Utility', () => {
     beforeEach(async () => log.notice($gry('+--------------------------------------------------------------')))
     afterEach(async () => log.notice($gry('+--------------------------------------------------------------')))
 

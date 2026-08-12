@@ -294,15 +294,15 @@ describe('OXLint', () => {
           {
             ignorePatterns: ['**/*'],
           },
-          'my-oxfmt-config.json',
+          'my-oxlint-config.json',
         )
 
         await expect(
-          find('**/test.ts', { directory: tempDir }).plug(new OXLint('@/my-oxfmt-config.json')), // specific config file
+          find('**/test.ts', { directory: tempDir }).plug(new OXLint('@/my-oxlint-config.json')), // specific config file
         ).toBeRejectedWithError(BuildFailure)
       }))
 
-    it('should fail when no files files are to be formatted', () =>
+    it('should fail when no files are to be linted', () =>
       async.runAsync(context, async () => {
         await expect(
           find('**/bozo.ts', { directory: tempDir }).plug(new OXLint('')), // empty config file

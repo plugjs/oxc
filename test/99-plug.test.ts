@@ -3,7 +3,7 @@ import { merge } from '@plugjs/plug'
 
 describe('Plug installation', () => {
   it('should install the "oxc", "oxfmt" and "oxlint" plugs', async () => {
-    // Initially, no plugs shoult be installed...
+    // Initially, no plugs should be installed...
     expect(merge([]).oxc).toBeUndefined()
     expect(merge([]).oxfmt).toBeUndefined()
     expect(merge([]).oxlint).toBeUndefined()

@@ -60,7 +60,7 @@ describe('OXFmt', () => {
       ])
     })
 
-    it('should report errors when files ares not formatted correctly', async () => {
+    it('should report errors when files are not formatted correctly', async () => {
       const report = new MockReport()
       await writeConfig({ semi: false, ignorePatterns: ['**/invalid*'] })
       await format({ cwd: '@' }, context, report, ['resources'])
@@ -110,7 +110,7 @@ describe('OXFmt', () => {
       ])
     })
 
-    it('should still report errors when files ares not formatted correctly but formatting should warn', async () => {
+    it('should still report errors when files are not formatted correctly but formatting should warn', async () => {
       const report = new MockReport()
       await writeConfig({ semi: false })
       await format({ cwd: '@', warnOnFormat: true }, context, report, ['resources'])
@@ -164,7 +164,7 @@ describe('OXFmt', () => {
       ])
     })
 
-    it('should report an error when all files are being ingored', async () => {
+    it('should report an error when all files are being ignored', async () => {
       const report = new MockReport()
       await writeConfig({ semi: false, ignorePatterns: ['**/*.ts', '**/*.js'] })
       await format({ cwd: '@', warnOnFormat: true }, context, report, ['resources'])
@@ -259,7 +259,7 @@ describe('OXFmt', () => {
         ).toBeRejectedWithError(BuildFailure)
       }))
 
-    it('should fail when no files files are to be formatted', () =>
+    it('should fail when no files are to be formatted', () =>
       async.runAsync(context, async () => {
         await expect(
           find('**/bozo.ts', { directory: tempDir }).plug(new OXFmt('')), // empty config file
