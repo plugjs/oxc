@@ -179,12 +179,6 @@ export async function lint(
   // coverage ignore next // can't verify this exception
   if (code !== 0 && code !== 1) {
     report.add({ level: ERROR, message: `OXLint failed with exit code ${code}`, tags: ['oxlint'] })
-  } else if (report.empty) {
-    if (code === 0) {
-      report.add({ level: NOTICE, message: `OXLint found no issues (no diagnostics found)` })
-    } else {
-      report.add({ level: ERROR, message: `OXLint failed with exit code ${code} but no diagnostics were reported` })
-    }
   }
 }
 
