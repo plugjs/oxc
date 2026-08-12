@@ -1,9 +1,11 @@
-import { $p, async, BuildFailure, find, mkdtemp, rmrf } from '@plugjs/plug'
-import { readFile, writeFile } from '@plugjs/plug/fs'
+import { async, BuildFailure, find, mkdtemp } from '@plugjs/plug'
+import { readFile, realpath, rm, writeFile } from '@plugjs/plug/fs'
+import { $gry, ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
 import { resolveAbsolutePath } from '@plugjs/plug/paths'
 import { Context } from '@plugjs/plug/pipe'
 
-import { oxfmt, OXFmt } from '../src/oxfmt.ts'
+import { format, oxfmt, OXFmt } from '../src/oxfmt.ts'
+import { MockReport } from './mock-report.ts'
 
 import type { AbsolutePath } from '@plugjs/plug'
 import type { OxfmtConfig } from 'oxfmt'
@@ -14,35 +16,222 @@ describe('OXFmt', () => {
 
   function writeConfig(config: OxfmtConfig, file: string = '.oxfmtrc.json'): Promise<void> {
     const configFile = resolveAbsolutePath(tempDir, file)
-    return writeFile(configFile, JSON.stringify(config, null, 2), 'utf-8')
+    return writeFile(configFile, JSON.stringify(config, null, 2) + '\n', 'utf-8')
   }
 
   beforeEach(async () => {
-    tempDir = mkdtemp()
-    log.notice(`Created temporary directory ${$p(tempDir)}`)
+    tempDir = (await realpath(mkdtemp())) as AbsolutePath
     await find('resources/**/*', { directory: 'test' }).copy(tempDir)
     const buildFile = resolveAbsolutePath(tempDir, 'build.ts')
     context = new Context(buildFile, async.requireContext().taskName)
   })
 
   afterEach(async () => {
-    await rmrf(tempDir)
+    await rm(tempDir, { recursive: true })
+  })
+
+  describe('OXFmt Formatting', () => {
+    it('should report errors when files can not be parsed', async () => {
+      const report = new MockReport()
+      await writeConfig({ semi: false, ignorePatterns: ['**/*.ts'] })
+      await format({ cwd: '@' }, context, report, ['resources'])
+      expect(report.data).toMatchContents([
+        {
+          level: ERROR,
+          file: context.resolve('@/resources/invalid.js'),
+          line: 1,
+          column: 5,
+          message: expect.toMatch('semicolon'), // "Expected a semicolon or ..."
+          tags: ['oxfmt'],
+        },
+        {
+          level: ERROR,
+          file: context.resolve('@/resources/invalid2.js'),
+          line: 14,
+          column: 10,
+          message: expect.toMatch('semicolon'), // "Expected a semicolon or ..."
+          tags: ['oxfmt'],
+        },
+        {
+          level: ERROR,
+          message: expect.toMatch('files'), // "Error occurred when checking code style in the above files"
+          tags: ['oxfmt'],
+        },
+      ])
+    })
+
+    it('should report errors when files are not formatted correctly', async () => {
+      const report = new MockReport()
+      await writeConfig({ semi: false, ignorePatterns: ['**/invalid*'] })
+      await format({ cwd: '@' }, context, report, ['resources'])
+      expect(report.data).toMatchContents([
+        {
+          level: ERROR,
+          file: context.resolve('@/resources/test.ts'),
+          message: 'File is not well formatted',
+          tags: ['oxfmt'],
+        },
+        {
+          level: ERROR,
+          file: context.resolve('@/resources/warnings.ts'),
+          message: 'File is not well formatted',
+          tags: ['oxfmt'],
+        },
+        {
+          level: ERROR,
+          message: expect.toMatch(/^OXFmt formatting complete \d+ ms$/), // This is *our* message
+          tags: ['oxfmt'],
+        },
+      ])
+    })
+
+    it('should report warnings when formatting inconsistencies should not fail the build', async () => {
+      const report = new MockReport()
+      await writeConfig({ semi: false, ignorePatterns: ['**/invalid*'] })
+      await format({ cwd: '@', warnOnFormat: true }, context, report, ['resources'])
+      expect(report.data).toMatchContents([
+        {
+          level: WARN,
+          file: context.resolve('@/resources/warnings.ts'),
+          message: 'File is not well formatted', // This is *our* message
+          tags: ['oxfmt'],
+        },
+        {
+          level: WARN,
+          file: context.resolve('@/resources/test.ts'),
+          message: 'File is not well formatted', // This is *our* message
+          tags: ['oxfmt'],
+        },
+        {
+          level: WARN,
+          message: expect.toMatch(/^OXFmt formatting complete \d+ ms$/), // This is *our* message
+          tags: ['oxfmt'],
+        },
+      ])
+    })
+
+    it('should still report errors when files are not formatted correctly but formatting should warn', async () => {
+      const report = new MockReport()
+      await writeConfig({ semi: false })
+      await format({ cwd: '@', warnOnFormat: true }, context, report, ['resources'])
+      expect(report.data).toMatchContents([
+        {
+          level: ERROR,
+          file: context.resolve('@/resources/invalid.js'),
+          line: 1,
+          column: 5,
+          message: expect.toMatch('semicolon'), // "Expected a semicolon or ..."
+          tags: ['oxfmt'],
+        },
+        {
+          level: ERROR,
+          file: context.resolve('@/resources/invalid2.js'),
+          line: 14,
+          column: 10,
+          message: expect.toMatch('semicolon'), // "Expected a semicolon or ..."
+          tags: ['oxfmt'],
+        },
+        {
+          level: ERROR,
+          file: context.resolve('@/resources/test.ts'),
+          message: 'File is not well formatted',
+          tags: ['oxfmt'],
+        },
+        {
+          level: ERROR,
+          file: context.resolve('@/resources/warnings.ts'),
+          message: 'File is not well formatted',
+          tags: ['oxfmt'],
+        },
+        {
+          level: ERROR,
+          message: expect.toMatch('files'), // "Error occurred when checking code style in the above files"
+          tags: ['oxfmt'],
+        },
+      ])
+    })
+
+    it('should report an error when no files are being formatted', async () => {
+      const report = new MockReport()
+      await writeConfig({ semi: false })
+      await format({ cwd: '@', warnOnFormat: true }, context, report, ['nothing'])
+      expect(report.data).toMatchContents([
+        {
+          level: ERROR,
+          message: expect.toMatch('one target file'), // "Expected at least one target file..."
+          tags: ['oxfmt'],
+        },
+      ])
+    })
+
+    it('should report an error when all files are being ignored', async () => {
+      const report = new MockReport()
+      await writeConfig({ semi: false, ignorePatterns: ['**/*.ts', '**/*.js'] })
+      await format({ cwd: '@', warnOnFormat: true }, context, report, ['resources'])
+      expect(report.data).toMatchContents([
+        {
+          level: ERROR,
+          message: expect.toMatch('one target file'), // "Expected at least one target file..."
+          tags: ['oxfmt'],
+        },
+      ])
+    })
+
+    it('should report success when everything is well formatted', async () => {
+      const report = new MockReport()
+      await writeConfig({ semi: true, ignorePatterns: ['**/warnings.ts', '**/invalid*'] })
+      await format({ cwd: '@', warnOnFormat: true }, context, report, ['resources'])
+      expect(report.data).toMatchContents([
+        {
+          level: NOTICE,
+          message: expect.toMatch(/^OXFmt formatting complete \d+ ms$/), // This is *our* message
+          tags: ['oxfmt'],
+        },
+      ])
+    })
+
+    it('should report success when everything is well formatted using an alternative config', async () => {
+      const report = new MockReport()
+      await writeConfig({ semi: true, ignorePatterns: ['**/warnings.ts', '**/invalid*'] }, 'my-oxfmt-config.json')
+      await format({ cwd: '@', config: '@/my-oxfmt-config.json' }, context, report, ['resources'])
+      expect(report.data).toMatchContents([
+        {
+          level: NOTICE,
+          message: expect.toMatch(/^OXFmt formatting complete \d+ ms$/), // This is *our* message
+          tags: ['oxfmt'],
+        },
+      ])
+    })
+
+    it('should fix sources and report success when formatting could be fixed', async () => {
+      const filename = resolveAbsolutePath(tempDir, 'resources/test.ts')
+
+      const before = await readFile(filename, 'utf-8')
+      expect(before).toEqual('console.log("This is a test");\n')
+
+      const report = new MockReport()
+      await writeConfig({ semi: false, singleQuote: true, ignorePatterns: ['**/warnings.ts', '**/invalid*'] })
+      await format({ cwd: '@', warnOnFormat: true, fix: true }, context, report, ['resources'])
+      expect(report.data).toMatchContents([
+        {
+          level: NOTICE,
+          message: expect.toMatch(/^Finished.*threads/), // "Finished in 23ms on 1 files using 12 threads."
+          tags: ['oxfmt'],
+        },
+      ])
+
+      const after = await readFile(filename, 'utf-8')
+      expect(after).toEqual("console.log('This is a test')\n")
+    })
   })
 
   describe('OXFmt Plug', () => {
-    it('should fail with parsing errors', () =>
-      async.runAsync(context, async () => {
-        await expect(find('**/*', { directory: tempDir }).plug(new OXFmt())) //
-          .toBeRejectedWithError(BuildFailure)
-      }))
+    beforeEach(async () => log.notice($gry('+--------------------------------------------------------------')))
+    afterEach(async () => log.notice($gry('+--------------------------------------------------------------')))
 
-    it('should fail when files are not formatted correctly', () =>
+    it('should fail with parsing errors', async () =>
       async.runAsync(context, async () => {
-        await writeConfig({
-          ignorePatterns: ['**/invalid*'],
-        })
-
-        await expect(find('**/*', { directory: tempDir }).plug(new OXFmt())) //
+        await expect(find('**/*', { directory: tempDir }).plug(new OXFmt({ cwd: '@' }))) // default config file
           .toBeRejectedWithError(BuildFailure)
       }))
 
@@ -50,28 +239,13 @@ describe('OXFmt', () => {
       async.runAsync(context, async () => {
         await writeConfig({
           ignorePatterns: ['**/invalid*'],
-        })
-
-        await find('**/*', { directory: tempDir }).plug(new OXFmt({ warnOnFormat: true }))
-      }))
-
-    it('should fail when warning but parsing errors are found', () =>
-      async.runAsync(context, async () => {
-        await expect(find('**/*', { directory: tempDir }).plug(new OXFmt({ warnOnFormat: true }))) //
-          .toBeRejectedWithError(BuildFailure)
-      }))
-
-    it('should succeed with nothing to report', () =>
-      async.runAsync(context, async () => {
-        await writeConfig({
-          ignorePatterns: ['**/invalid*', '**/warnings.ts'],
           semi: false,
         })
 
-        await find('**/*', { directory: tempDir }).plug(new OXFmt())
+        await find('**/*', { directory: tempDir }).plug(new OXFmt({ cwd: '@', warnOnFormat: true })) // default config file
       }))
 
-    it('should fail when no files are being formatted', () =>
+    it('should fail when all files are ignored', () =>
       async.runAsync(context, async () => {
         await writeConfig(
           {
@@ -81,61 +255,52 @@ describe('OXFmt', () => {
         )
 
         await expect(
-          find('**/*', { directory: tempDir }).plug(new OXFmt('@/my-oxfmt-config.json')),
-        ).toBeRejectedWithError(BuildFailure)
-
-        await expect(
-          find('bogus.ts', { directory: tempDir }).plug(new OXFmt('')), //
+          find('**/test.ts', { directory: tempDir }).plug(new OXFmt('@/my-oxfmt-config.json')), // specific config file
         ).toBeRejectedWithError(BuildFailure)
       }))
 
-    it('should fix issues using a non-standard config files', () =>
+    it('should fail when no files are to be formatted', () =>
       async.runAsync(context, async () => {
-        await writeConfig(
-          {
-            ignorePatterns: ['**/invalid*'],
-            singleQuote: true,
-          },
-          'my-oxfmt-config.json',
-        )
-
-        await writeConfig({}, 'my-tsconfig.json')
-
-        await find('**/*', { directory: tempDir }).plug(
-          new OXFmt({
-            config: '@/my-oxfmt-config.json',
-            fix: true,
-          }),
-        )
-
-        const contents = await readFile(resolveAbsolutePath(tempDir, 'resources/warnings.ts'), 'utf-8')
-        expect(contents).toEqual("if ((!'foo') in {}) {\n}\nlet warning = true;\n")
+        await expect(
+          find('**/bozo.ts', { directory: tempDir }).plug(new OXFmt('')), // empty config file
+        ).toBeRejectedWithError(BuildFailure)
       }))
   })
 
   describe('OXFmt Utility', () => {
+    beforeEach(async () => log.notice($gry('+--------------------------------------------------------------')))
+    afterEach(async () => log.notice($gry('+--------------------------------------------------------------')))
+
     it('should fail with errors', () =>
       async.runAsync(context, async () => {
-        const cwd = process.cwd()
-        try {
-          process.chdir(tempDir)
-          await expect(oxfmt()).toBeRejectedWithError(BuildFailure)
-        } finally {
-          process.chdir(cwd)
-        }
+        await expect(oxfmt({ cwd: '@' })).toBeRejectedWithError(BuildFailure)
       }))
 
     it('should succeed with warnings', () =>
       async.runAsync(context, async () => {
-        await writeConfig({
-          ignorePatterns: ['**/warnings.ts', '**/invalid*', '**/.*'],
-          semi: false,
-        })
+        await writeConfig(
+          {
+            ignorePatterns: ['**/warnings.ts', '**/invalid*'],
+            semi: false,
+          },
+          'my-oxfmt-config.json',
+        )
 
+        await oxfmt({
+          warnOnFormat: true,
+          paths: ['resources'],
+          config: '@my-oxfmt-config.json',
+          cwd: '@',
+        })
+      }))
+
+    it('should succeed when everything is well formatted', () =>
+      async.runAsync(context, async () => {
+        // Change the CWD to let OXFmt find the correct paths
         const cwd = process.cwd()
         try {
           process.chdir(tempDir)
-          await oxfmt('resources')
+          await oxfmt('resources/test.ts')
         } finally {
           process.chdir(cwd)
         }

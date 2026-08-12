@@ -1,6 +1,7 @@
-import { assert, async } from '@plugjs/plug'
+import { async } from '@plugjs/plug'
+import { realpath } from '@plugjs/plug/fs'
 import { ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
-import { resolveAbsolutePath, resolveFile } from '@plugjs/plug/paths'
+import { assertAbsolutePath, resolveAbsolutePath } from '@plugjs/plug/paths'
 
 import { spawnBinary } from './spawn.ts'
 
@@ -29,17 +30,19 @@ export async function format(
   paths: string[],
 ): Promise<void> {
   // Extract options with defaults
-  const { config, fix = false, warnOnFormat: warnOnly = false, cwd: maybeCwd } = options
-  const cwd = context.resolve(maybeCwd || '.')
+  const { config, fix = false, warnOnFormat = false, cwd: maybeCwd } = options
 
   // Build the command line arguments for OXFmt
   const args = fix ? [] : ['--list-different']
 
+  // OXFmt is finicky with paths: for speed it never resolves symlinks, so
+  // we have to be careful to resolve everything for it...
+  const cwd = await realpath(context.resolve(maybeCwd || '.'))
+  assertAbsolutePath(cwd)
+
   if (config) {
-    const resolved = context.resolve(config)
-    const file = resolveFile(resolved)
-    assert(file, `OXFmt config file not found: "${resolved}"`)
-    args.push(`--config=${file}`)
+    const resolved = await realpath(context.resolve(config))
+    args.push(`--config=${resolved}`)
   }
 
   // Spawn the OXFmt binary and capture the output
@@ -57,14 +60,18 @@ export async function format(
   // - 0: All files are well formatted
   // - 1: Some files are not well formatted (WARN or ERROR, can be fixed)
   // - 2: Some files could not be parsed or no files were found
-  const level = code === 0 ? NOTICE : code === 1 ? (warnOnly ? WARN : ERROR) : ERROR
+  const level = code === 0 ? NOTICE : code === 1 ? (warnOnFormat ? WARN : ERROR) : ERROR
 
   // When `--list-different` (not fixing) OXFmt outputs the list of different
   // files to STDOUT and error/warning messages to STDERR...
+  let hasMessages = false
   if (fix) {
     stdout.split('\n').forEach((line) => {
       const message = line.trim()
-      if (message) report.add({ level, message, tags: ['oxfmt'] })
+      if (!message) return
+
+      report.add({ level, message, tags: ['oxfmt'] })
+      hasMessages = true
     })
   } else {
     stdout.split('\n').forEach((line) => {
@@ -86,25 +93,28 @@ export async function format(
   //    +----
   //   help: Try inserting a semicolon here
   // Error occurred when checking code style in the above files.
+  //
+  // Even more hairy is the fact that on *SOME* linux distros, the delimiters
+  // are unicode characters (see the regex below)...
 
   let message: string | undefined = undefined
   stderr.split('\n').forEach((line) => {
     let result: RegExpMatchArray | null
     // Lines starting with "  x ..." contain the error message, before the
     // line and file information... Let's store this and we'll pass
-    if ((result = line.match(/^\s+x\s+(.*)/)) != null) {
+    if ((result = line.match(/^\s+[x\u00d7]\s+(.*)/)) != null) {
       message = result[1]?.trim()
     }
 
     // Lines starting with "  ,-[" contain the file and line information, which
     // we can parse and add to the report along with the message we stored above
-    else if ((result = line.match(/^\s+,-\[([^\]]+)\]/)) != null) {
+    else if ((result = line.match(/^\s+[,\u{256d}][-\u{2500}]\[([^\]]+)\]/u)) != null) {
       const info = result[1]!.trim()
       let file: AbsolutePath | undefined = undefined
       let line: number | undefined = undefined
       let column: number | undefined = undefined
 
-      /* coverage ignore next // too many defaults for failsafe */
+      // coverage ignore next // too many defaults to ignore...
       if ((result = info.match(/^(.*):(\d+):(\d+)$/)) != null) {
         file = result[1] ? resolveAbsolutePath(cwd, result[1]) : undefined
         line = parseInt(result[2] || '0') || undefined
@@ -125,16 +135,15 @@ export async function format(
       const message = result[0]?.trim()
       if (message) {
         report.add({ level, message, tags: ['oxfmt'] })
-        report.add({ level, message: Buffer.from(message).toString('hex'), tags: ['oxfmt-debug'] })
+        hasMessages = true
       }
     }
   })
 
-  // Finally verify the correct exit code
-  // coverage ignore if
+  // coverage ignore if // can't verify this exception
   if (code !== 0 && code !== 1 && code !== 2) {
     report.add({ level: ERROR, message: `OXFmt failed with exit code ${code}`, tags: ['oxfmt'] })
-  } else if (report.empty) {
+  } else if (report.empty || !hasMessages) {
     report.add({ level, message: `OXFmt formatting complete ${duration} ms`, tags: ['oxfmt'] })
   }
 }
@@ -185,7 +194,7 @@ export class OXFmt implements Plug<Files> {
 
 /** Run OXFmt using defaults */
 export async function oxfmt(): Promise<void>
-/** Run OXFmt using on the specified paths using the default options */
+/** Run OXFmt on the specified paths using the default options */
 export async function oxfmt(...paths: string[]): Promise<void>
 /** Run OXFmt using the specified options */
 export async function oxfmt(options: OXFmtOptions): Promise<void>

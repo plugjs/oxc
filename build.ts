@@ -19,9 +19,10 @@ export default plugjs({
   /** Run all tests */
   async test(): Promise<void> {
     banner('Running Tests')
+    await rmrf('.coverage-data') // wipe existing coverage data
     await tsc('test/tsconfig.json', { noEmit: true }) // type check our tests
     await find('**/*.test.*', { directory: 'test' }) // find all our test files
-      .test({ coverageDir: '.coverage-data' }) // run tests collecting coverage
+      .test({ coverageDir: '.coverage-data', summary: true }) // run tests
   },
 
   /** Run tests capturing errors, but always producing coverage */
@@ -30,7 +31,7 @@ export default plugjs({
       await this.test()
     } finally {
       banner('Preparing coverage report')
-      await find('**/*.ts', { directory: 'src' }) // find our source files
+      await find('**/*.ts', { directory: 'src', ignore: 'configs/*.ts' }) //
         .coverage('.coverage-data', {
           reportDir: 'coverage',
           minimumCoverage: 100,

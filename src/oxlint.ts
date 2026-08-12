@@ -1,6 +1,7 @@
-import { assert, async } from '@plugjs/plug'
+import { async } from '@plugjs/plug'
+import { realpath } from '@plugjs/plug/fs'
 import { ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
-import { resolveAbsolutePath, resolveFile } from '@plugjs/plug/paths'
+import { assertAbsolutePath, resolveAbsolutePath } from '@plugjs/plug/paths'
 
 import { spawnBinary } from './spawn.ts'
 
@@ -20,7 +21,7 @@ interface OXLintResult {
     message: string
     /** The code associated with the diagnostic (e.g. `eslint(curly)`). */
     code: string
-    /** The severity of the diagnostic (`error`, `warning` or some other ). */
+    /** The severity of the diagnostic (`error`, `warning` or some other). */
     severity?: 'error' | 'warning' | null | undefined
     /** The URL pointing to the documentation for the linting rule */
     url?: string | null | undefined
@@ -88,24 +89,26 @@ export async function lint(
 ): Promise<void> {
   // Extract options with defaults
   const { config, tsConfig, fix = false, reportUnusedDisableDirectives = true, cwd: maybeCwd } = options
-  const cwd = context.resolve(maybeCwd || '.')
 
   // Build the command line arguments for OXLint
   const args = ['--format=json', '--type-aware']
-  if (config) {
-    const resolved = context.resolve(config)
-    const file = resolveFile(resolved)
-    assert(file, `OXLint config file not found: "${resolved}"`)
-    args.push(`--config=${file}`)
-  }
-  if (tsConfig) {
-    const resolved = context.resolve(tsConfig)
-    const file = resolveFile(resolved)
-    assert(file, `OXLint TypeScript config file not found: "${resolved}"`)
-    args.push(`--tsconfig=${file}`)
-  }
   if (reportUnusedDisableDirectives) args.push(`--report-unused-disable-directives`)
   if (fix) args.push(`--fix`)
+
+  // OXLint is finicky with paths: for speed it never resolves symlinks, so
+  // we have to be careful to resolve everything for it...
+  const cwd = await realpath(context.resolve(maybeCwd || '.'))
+  assertAbsolutePath(cwd)
+
+  if (config) {
+    const resolved = await realpath(context.resolve(config))
+    args.push(`--config=${resolved}`)
+  }
+
+  if (tsConfig) {
+    const resolved = context.resolve(tsConfig)
+    args.push(`--tsconfig=${resolved}`)
+  }
 
   // Spawn the OXLint binary and capture the output
   const start = Date.now()
@@ -125,7 +128,6 @@ export async function lint(
   // to find the first '{' character and parse from there
   const jsonStart = stdout.search(/{\s*"diagnostics"\s*:/)
   let preamble: string, parsed: OXLintResult
-  // coverage ignore else
   if (jsonStart >= 0) {
     preamble = stdout.slice(0, jsonStart)
     parsed = JSON.parse(stdout.slice(jsonStart))
@@ -142,10 +144,9 @@ export async function lint(
   }
 
   // Log any stderr output as warnings
-  // coverage ignore if
   if (stderr.trim()) {
     stderr.split('\n').forEach((line) => {
-      if (line.trim()) report.add({ level, message: line.trim(), tags: ['oxlint'] })
+      if (line.trim()) report.add({ level: WARN, message: line.trim(), tags: ['oxlint'] })
     })
   }
 
@@ -154,7 +155,7 @@ export async function lint(
     report.add({
       file: diagnostic.filename ? resolveAbsolutePath(cwd, diagnostic.filename) : /* coverage ignore next */ undefined,
       message: diagnostic.message || /* coverage ignore next */ 'Unknown error',
-      tags: diagnostic.code || undefined,
+      tags: [diagnostic.code || /* coverage ignore next */ 'oxlint'],
       column: diagnostic.labels?.[0]?.span?.column,
       line: diagnostic.labels?.[0]?.span?.line,
       length: diagnostic.labels?.[0]?.span?.length,
@@ -175,20 +176,9 @@ export async function lint(
     tags: ['oxlint'],
   })
 
-  // Finally verify the correct exit code
-  // coverage ignore if
+  // coverage ignore next // can't verify this exception
   if (code !== 0 && code !== 1) {
     report.add({ level: ERROR, message: `OXLint failed with exit code ${code}`, tags: ['oxlint'] })
-  }
-
-  // Final message (should never happen, but just in case)
-  // coverage ignore if
-  if (report.empty) {
-    if (code === 0) {
-      report.add({ level: NOTICE, message: `OXLint found no issues (no diagnostics found)` })
-    } else {
-      report.add({ level: ERROR, message: `OXLint failed with exit code ${code} but no diagnostics were reported` })
-    }
   }
 }
 
@@ -234,7 +224,7 @@ export class OXLint implements Plug<Files> {
 
 /** Run OXLint using defaults */
 export async function oxlint(): Promise<void>
-/** Run OXLint using on the specified paths using the default options */
+/** Run OXLint on the specified paths using the default options */
 export async function oxlint(...paths: string[]): Promise<void>
 /** Run OXLint using the specified options */
 export async function oxlint(options: OXLintOptions): Promise<void>

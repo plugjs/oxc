@@ -14,7 +14,7 @@ export default defineConfig({
   // "trailingComma": "all",
   // "useTabs": false,
 
-  // Format JSDOC comments, defaults from OXlint are OK
+  // Format JSDoc comments, defaults from OXLint are OK
   jsdoc: {
     lineWrappingStyle: 'balance',
     preferCodeFences: true,
