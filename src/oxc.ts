@@ -27,7 +27,10 @@ export class OXC implements Plug<Files> {
       // No files? No report! (But make it look similar to a normal report)
       report.add({ level: ERROR, message: 'No files found to format. Please check your paths and ignore patterns.' })
     } else {
-      // Run OXFmt on the files *first* and add the diagnostics to the report
+      // Run OXFmt on the files *first* and add the diagnostics to the report.
+      // We run this *first* to make sure that the formatter has time to fix any
+      // issues before we run the linter, which may otherwise report errors
+      // that have already been fixed.
       await format(oxfmtOptions, context, report, [...files.absolutePaths()])
       // Then run OXLint on the files and add the diagnostics to the report
       await lint(oxlintOptions, context, report, [...files.absolutePaths()])
