@@ -2,10 +2,10 @@ import { execFile } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { findPackageJSON } from 'node:module'
 import { delimiter } from 'node:path'
+import { stripVTControlCharacters as stripansi } from 'node:util'
 
 import { $p, $wht, assert, BuildFailure } from '@plugjs/plug'
 import { assertAbsolutePath, resolveDirectory, resolveFile } from '@plugjs/plug/paths'
-import stripansi from 'strip-ansi'
 
 import type { AbsolutePath } from '@plugjs/plug/paths'
 import type { Context } from '@plugjs/plug/pipe'
