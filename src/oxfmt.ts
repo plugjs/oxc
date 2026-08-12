@@ -112,13 +112,13 @@ export async function format(
     let result: RegExpMatchArray | null
     // Lines starting with "  x ..." contain the error message, before the
     // line and file information... Let's store this and we'll pass
-    if ((result = line.match(/^\s+[x\u0078]\s+(.*)/)) != null) {
+    if ((result = line.match(/^\s+[x\u00d7]\s+(.*)/)) != null) {
       message = result[1]?.trim()
     }
 
     // Lines starting with "  ,-[" contain the file and line information, which
     // we can parse and add to the report along with the message we stored above
-    else if ((result = line.match(/^\s+[,\u256d][-\u2500]\[([^\]]+)\]/)) != null) {
+    else if ((result = line.match(/^\s+[,\u{256d}][-\u{2500}]\[([^\]]+)\]/u)) != null) {
       const info = result[1]!.trim()
       let file: AbsolutePath | undefined = undefined
       let line: number | undefined = undefined
