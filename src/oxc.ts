@@ -25,7 +25,7 @@ export class OXC implements Plug<Files> {
 
     if (files.length === 0) {
       // No files? No report! (But make it look similar to a normal report)
-      report.add({ level: ERROR, message: 'No files found to format. Please check your paths and ignore patterns.' })
+      report.add({ level: ERROR, message: 'No files found to process. Please check your paths and ignore patterns.' })
     } else {
       // Run OXFmt on the files *first* and add the diagnostics to the report.
       // We run this *first* to make sure that the formatter has time to fix any
@@ -47,11 +47,11 @@ export class OXC implements Plug<Files> {
  * OXC RUNNER IMPLEMENTATION                                                  *
  * ========================================================================== */
 
-/** Run OXLint using defaults */
+/** Run OXFmt and OXLint using defaults */
 export async function oxc(): Promise<void>
-/** Run OXLint on the specified paths using the default options */
+/** Run OXFmt and OXLint on the specified paths using the default options */
 export async function oxc(...paths: string[]): Promise<void>
-/** Run OXLint using the specified options */
+/** Run OXFmt and OXLint using the specified options */
 export async function oxc(options: OXCOptions): Promise<void>
 /* Overload implementation */
 export async function oxc(optionsOrFirstPath: string | OXCOptions = {}, ...additionalPaths: string[]): Promise<void> {
