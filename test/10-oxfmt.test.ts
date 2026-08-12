@@ -1,5 +1,5 @@
 import { async, BuildFailure, find, mkdtemp } from '@plugjs/plug'
-import { readFile, rm, writeFile } from '@plugjs/plug/fs'
+import { readFile, realpath, rm, writeFile } from '@plugjs/plug/fs'
 import { $gry, ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
 import { resolveAbsolutePath } from '@plugjs/plug/paths'
 import { Context } from '@plugjs/plug/pipe'
@@ -20,7 +20,7 @@ describe('OXFmt', () => {
   }
 
   beforeEach(async () => {
-    tempDir = mkdtemp()
+    tempDir = (await realpath(mkdtemp())) as AbsolutePath
     await find('resources/**/*', { directory: 'test' }).copy(tempDir)
     const buildFile = resolveAbsolutePath(tempDir, 'build.ts')
     context = new Context(buildFile, async.requireContext().taskName)
@@ -231,7 +231,7 @@ describe('OXFmt', () => {
 
     it('should fail with parsing errors', async () =>
       async.runAsync(context, async () => {
-        await expect(find('**/*', { directory: tempDir }).plug(new OXFmt())) // default config file
+        await expect(find('**/*', { directory: tempDir }).plug(new OXFmt({ cwd: '@' }))) // default config file
           .toBeRejectedWithError(BuildFailure)
       }))
 
@@ -239,9 +239,10 @@ describe('OXFmt', () => {
       async.runAsync(context, async () => {
         await writeConfig({
           ignorePatterns: ['**/invalid*'],
+          semi: false,
         })
 
-        await find('**/*', { directory: tempDir }).plug(new OXFmt({ warnOnFormat: true })) // default config file
+        await find('**/*', { directory: tempDir }).plug(new OXFmt({ cwd: '@', warnOnFormat: true })) // default config file
       }))
 
     it('should fail when all files are ignored', () =>
@@ -272,14 +273,7 @@ describe('OXFmt', () => {
 
     it('should fail with errors', () =>
       async.runAsync(context, async () => {
-        // Change the CWD to to parse all the files in the temporary directory
-        const cwd = process.cwd()
-        try {
-          process.chdir(tempDir)
-          await expect(oxfmt()).toBeRejectedWithError(BuildFailure)
-        } finally {
-          process.chdir(cwd)
-        }
+        await expect(oxfmt({ cwd: '@' })).toBeRejectedWithError(BuildFailure)
       }))
 
     it('should succeed with warnings', () =>
@@ -292,20 +286,17 @@ describe('OXFmt', () => {
           'my-oxfmt-config.json',
         )
 
-        // Change the CWD to to parse all the files in the temporary directory
-        // and to find the custom configuration file
-        const cwd = process.cwd()
-        try {
-          process.chdir(tempDir)
-          await oxfmt({ warnOnFormat: true, paths: ['resources'], config: 'my-oxfmt-config.json' })
-        } finally {
-          process.chdir(cwd)
-        }
+        await oxfmt({
+          warnOnFormat: true,
+          paths: ['resources'],
+          config: '@my-oxfmt-config.json',
+          cwd: '@',
+        })
       }))
 
     it('should succeed when everything is well formatted', () =>
       async.runAsync(context, async () => {
-        // Change the CWD to to parse relative to the temporary directory
+        // Change the CWD to let OXFmt find the correct paths
         const cwd = process.cwd()
         try {
           process.chdir(tempDir)
