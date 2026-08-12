@@ -61,11 +61,6 @@ export async function format(
   })
   const duration = Date.now() - start
 
-  context.log.notice('STDOUT:', Buffer.from(stdout).toString('base64'))
-  context.log.notice('STDOUT:', stdout)
-  context.log.notice('STDERR:', Buffer.from(stderr).toString('base64'))
-  context.log.notice('STDERR:', stderr)
-
   // The level of the report is determined by the exit code of OXFmt:
   // - 0: All files are well formatted
   // - 1: Some files are not well formatted (WARN or ERROR, can be fixed)
