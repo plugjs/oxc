@@ -21,7 +21,7 @@ interface OXLintResult {
     message: string
     /** The code associated with the diagnostic (e.g. `eslint(curly)`). */
     code: string
-    /** The severity of the diagnostic (`error`, `warning` or some other ). */
+    /** The severity of the diagnostic (`error`, `warning` or some other). */
     severity?: 'error' | 'warning' | null | undefined
     /** The URL pointing to the documentation for the linting rule */
     url?: string | null | undefined
@@ -95,8 +95,8 @@ export async function lint(
   if (reportUnusedDisableDirectives) args.push(`--report-unused-disable-directives`)
   if (fix) args.push(`--fix`)
 
-  // OXLint is finnicky with paths: for speed it never resolves symlinks, so
-  // we have to be carful to resolve everything for it...
+  // OXLint is finicky with paths: for speed it never resolves symlinks, so
+  // we have to be careful to resolve everything for it...
   const cwd = await realpath(context.resolve(maybeCwd || '.'))
   assertAbsolutePath(cwd)
 
@@ -224,7 +224,7 @@ export class OXLint implements Plug<Files> {
 
 /** Run OXLint using defaults */
 export async function oxlint(): Promise<void>
-/** Run OXLint using on the specified paths using the default options */
+/** Run OXLint on the specified paths using the default options */
 export async function oxlint(...paths: string[]): Promise<void>
 /** Run OXLint using the specified options */
 export async function oxlint(options: OXLintOptions): Promise<void>

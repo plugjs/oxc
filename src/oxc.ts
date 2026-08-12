@@ -49,7 +49,7 @@ export class OXC implements Plug<Files> {
 
 /** Run OXLint using defaults */
 export async function oxc(): Promise<void>
-/** Run OXLint using on the specified paths using the default options */
+/** Run OXLint on the specified paths using the default options */
 export async function oxc(...paths: string[]): Promise<void>
 /** Run OXLint using the specified options */
 export async function oxc(options: OXCOptions): Promise<void>

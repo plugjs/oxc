@@ -35,8 +35,8 @@ export async function format(
   // Build the command line arguments for OXFmt
   const args = fix ? [] : ['--list-different']
 
-  // OXFmt is finnicky with paths: for speed it never resolves symlinks, so
-  // we have to be carful to resolve everything for it...
+  // OXFmt is finicky with paths: for speed it never resolves symlinks, so
+  // we have to be careful to resolve everything for it...
   const cwd = await realpath(context.resolve(maybeCwd || '.'))
   assertAbsolutePath(cwd)
 
@@ -194,7 +194,7 @@ export class OXFmt implements Plug<Files> {
 
 /** Run OXFmt using defaults */
 export async function oxfmt(): Promise<void>
-/** Run OXFmt using on the specified paths using the default options */
+/** Run OXFmt on the specified paths using the default options */
 export async function oxfmt(...paths: string[]): Promise<void>
 /** Run OXFmt using the specified options */
 export async function oxfmt(options: OXFmtOptions): Promise<void>
