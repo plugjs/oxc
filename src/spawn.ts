@@ -57,7 +57,7 @@ export async function spawnBinary(options: {
     const child = execFile(
       resolved,
       [...args, ...paths],
-      { env: { ...process.env, PATH }, cwd: cwd },
+      { env: { ...process.env, PATH }, cwd: cwd, maxBuffer: 10 * 1024 * 1024 },
       (error, stdout, stderr) => {
         if (!error) {
           return resolve({ code: 0, stdout: stripansi(stdout), stderr: stripansi(stderr) })
