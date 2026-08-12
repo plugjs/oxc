@@ -261,7 +261,7 @@ describe('OXLint', () => {
 
     it('should fail with errors', () =>
       async.runAsync(context, async () => {
-        await expect(find('**/*', { directory: tempDir }).plug(new OXLint())) //
+        await expect(find('**/*', { directory: tempDir }).plug(new OXLint({ cwd: '@' }))) //
           .toBeRejectedWithError(BuildFailure)
       }))
 
@@ -285,7 +285,7 @@ describe('OXLint', () => {
           rules: { 'no-unused-vars': 'off' },
         })
 
-        await find('**/*', { directory: tempDir }).plug(new OXLint())
+        await find('**/*', { directory: tempDir }).plug(new OXLint({ cwd: '@' }))
       }))
 
     it('should fail when all files are ignored', () =>
