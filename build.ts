@@ -31,7 +31,7 @@ export default plugjs({
       await this.test()
     } finally {
       banner('Preparing coverage report')
-      await find('**/*.ts', { directory: 'src' }) // find our source files
+      await find('**/*.ts', { directory: 'src', ignore: 'configs/*.ts' }) //
         .coverage('.coverage-data', {
           reportDir: 'coverage',
           minimumCoverage: 100,
