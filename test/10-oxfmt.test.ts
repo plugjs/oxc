@@ -10,7 +10,7 @@ import { MockReport } from './mock-report.ts'
 import type { AbsolutePath } from '@plugjs/plug'
 import type { OxfmtConfig } from 'oxfmt'
 
-fdescribe('OXFmt', () => {
+describe('OXFmt', () => {
   let tempDir: AbsolutePath
   let context: Context
 
@@ -30,7 +30,7 @@ fdescribe('OXFmt', () => {
     await rm(tempDir, { recursive: true })
   })
 
-  fdescribe('OXFmt Formatting', () => {
+  describe('OXFmt Formatting', () => {
     it('should report errors when files can not be parsed', async () => {
       const report = new MockReport()
       await writeConfig({ semi: false, ignorePatterns: ['**/*.ts'] })
@@ -225,17 +225,17 @@ fdescribe('OXFmt', () => {
     })
   })
 
-  fdescribe('OXFmt Plug', () => {
+  describe('OXFmt Plug', () => {
     beforeEach(async () => log.notice($gry('+--------------------------------------------------------------')))
     afterEach(async () => log.notice($gry('+--------------------------------------------------------------')))
 
-    fit('should fail with parsing errors', async () =>
+    it('should fail with parsing errors', async () =>
       async.runAsync(context, async () => {
         await expect(find('**/*', { directory: tempDir }).plug(new OXFmt())) // default config file
           .toBeRejectedWithError(BuildFailure)
       }))
 
-    fit('should warn when formatting inconsistencies should not fail the build', () =>
+    it('should warn when formatting inconsistencies should not fail the build', () =>
       async.runAsync(context, async () => {
         await writeConfig({
           ignorePatterns: ['**/invalid*'],
@@ -244,7 +244,7 @@ fdescribe('OXFmt', () => {
         await find('**/*', { directory: tempDir }).plug(new OXFmt({ warnOnFormat: true })) // default config file
       }))
 
-    fit('should fail when all files are ignored', () =>
+    it('should fail when all files are ignored', () =>
       async.runAsync(context, async () => {
         await writeConfig(
           {
@@ -258,7 +258,7 @@ fdescribe('OXFmt', () => {
         ).toBeRejectedWithError(BuildFailure)
       }))
 
-    fit('should fail when no files files are to be formatted', () =>
+    it('should fail when no files files are to be formatted', () =>
       async.runAsync(context, async () => {
         await expect(
           find('**/bozo.ts', { directory: tempDir }).plug(new OXFmt('')), // empty config file
@@ -266,11 +266,11 @@ fdescribe('OXFmt', () => {
       }))
   })
 
-  fdescribe('OXFmt Utility', () => {
+  describe('OXFmt Utility', () => {
     beforeEach(async () => log.notice($gry('+--------------------------------------------------------------')))
     afterEach(async () => log.notice($gry('+--------------------------------------------------------------')))
 
-    fit('should fail with errors', () =>
+    it('should fail with errors', () =>
       async.runAsync(context, async () => {
         // Change the CWD to to parse all the files in the temporary directory
         const cwd = process.cwd()
@@ -282,7 +282,7 @@ fdescribe('OXFmt', () => {
         }
       }))
 
-    fit('should succeed with warnings', () =>
+    it('should succeed with warnings', () =>
       async.runAsync(context, async () => {
         await writeConfig(
           {
@@ -303,7 +303,7 @@ fdescribe('OXFmt', () => {
         }
       }))
 
-    fit('should succeed when everything is well formatted', () =>
+    it('should succeed when everything is well formatted', () =>
       async.runAsync(context, async () => {
         // Change the CWD to to parse relative to the temporary directory
         const cwd = process.cwd()
