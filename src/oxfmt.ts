@@ -1,6 +1,7 @@
-import { assert, async } from '@plugjs/plug'
+import { async } from '@plugjs/plug'
+import { realpath } from '@plugjs/plug/fs'
 import { ERROR, NOTICE, WARN } from '@plugjs/plug/logging'
-import { resolveAbsolutePath, resolveFile, resolveRelativeChildPath } from '@plugjs/plug/paths'
+import { assertAbsolutePath, resolveAbsolutePath } from '@plugjs/plug/paths'
 
 import { spawnBinary } from './spawn.ts'
 
@@ -30,24 +31,18 @@ export async function format(
 ): Promise<void> {
   // Extract options with defaults
   const { config, fix = false, warnOnFormat = false, cwd: maybeCwd } = options
-  const cwd = context.resolve(maybeCwd || '.')
 
   // Build the command line arguments for OXFmt
   const args = fix ? [] : ['--list-different']
 
+  // OXFmt is finnicky with paths: for speed it never resolves symlinks, so
+  // we have to be carful to resolve everything for it...
+  const cwd = await realpath(context.resolve(maybeCwd || '.'))
+  assertAbsolutePath(cwd)
+
   if (config) {
-    const resolved = context.resolve(config)
-    const file = resolveFile(resolved)
-    assert(file, `OXFmt config file not found: "${resolved}"`)
-
-    // There is a bug in OXFmt whereas, if the config file is specified as an
-    // absolute path, it will mess up the resolution of the ignore patterns,
-    // so we have to _relativize_ the config file path to the current working
-    // directory
-    const relative = resolveRelativeChildPath(cwd, file)
-
-    // Push the config file argument to the command line arguments
-    args.push(`--config=${relative || file}`)
+    const resolved = await realpath(context.resolve(config))
+    args.push(`--config=${resolved}`)
   }
 
   // Spawn the OXFmt binary and capture the output
