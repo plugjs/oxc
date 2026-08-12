@@ -15,7 +15,9 @@ export class MockReport implements Report {
   readonly errorAnnotations: number = -1
   readonly records: number = -1
   readonly annotations: number = -1
-  readonly empty: boolean = false
+  get empty(): boolean {
+    return this._records.length === 0
+  }
 
   add(...records: ReportRecord[]): this {
     this._records.push(...records)
