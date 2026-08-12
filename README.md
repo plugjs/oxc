@@ -209,8 +209,7 @@ use them.
 Default Configurations
 ----------------------
 
-This package also exports the default OXFmt and OXLint configurations provided
-by this package:
+This package also exports default OXFmt and OXLint configurations:
 
 - [`@plugjs/oxc/configs/oxfmt`](./src/configs/oxfmt.ts): The default OXFmt
   configuration.
@@ -221,8 +220,7 @@ by this package:
   projects.
 
 For example, an OXFmt configuration in another project can start from the default
-configuration like this. Save this as `oxfmt.config.ts` in the root of your
-project:
+configuration like this:
 
 ```typescript
 import { defineConfig } from 'oxfmt'
@@ -235,9 +233,8 @@ export default defineConfig({
 })
 ```
 
-OXLint projects can import either the generic default configuration or the
-Node.js-specific one. Save this as `oxlint.config.ts` in the root of your
-project:
+An OXLint configuration can import either the generic default configuration or
+the Node.js-specific one:
 
 ```typescript
 import { defineConfig } from 'oxlint'
