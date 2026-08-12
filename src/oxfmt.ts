@@ -119,7 +119,7 @@ export async function format(
       let line: number | undefined = undefined
       let column: number | undefined = undefined
 
-      /* coverage ignore next // too many defaults for failsafe */
+      // coverage ignore next // too many defaults to ignore...
       if ((result = info.match(/^(.*):(\d+):(\d+)$/)) != null) {
         file = result[1] ? resolveAbsolutePath(cwd, result[1]) : undefined
         line = parseInt(result[2] || '0') || undefined
@@ -145,8 +145,7 @@ export async function format(
     }
   })
 
-  // Finally verify the correct exit code
-  // coverage ignore if
+  // coverage ignore if // can't verify this exception
   if (code !== 0 && code !== 1 && code !== 2) {
     report.add({ level: ERROR, message: `OXFmt failed with exit code ${code}`, tags: ['oxfmt'] })
   } else if (report.empty || !hasMessages) {
