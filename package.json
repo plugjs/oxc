@@ -1,6 +1,6 @@
 {
   "name": "@plugjs/oxc",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "OXLint and OXFmt support for PlugJS",
   "keywords": [
     "build",
@@ -62,17 +62,17 @@
     "transpile": "plug transpile"
   },
   "dependencies": {
-    "oxfmt": "^0.63.0",
-    "oxlint": "^1.78.0",
+    "oxfmt": "^0.64.0",
+    "oxlint": "^1.79.0",
     "oxlint-tsgolint": "^7.0.2001"
   },
   "devDependencies": {
-    "@plugjs/cov8": "^0.7.2",
-    "@plugjs/expect5": "^0.7.2",
-    "@plugjs/plug": "^0.7.2",
-    "@plugjs/typescript": "^0.7.2"
+    "@plugjs/cov8": "^0.7.3",
+    "@plugjs/expect5": "^0.7.3",
+    "@plugjs/plug": "^0.7.3",
+    "@plugjs/typescript": "^0.7.3"
   },
   "peerDependencies": {
-    "@plugjs/plug": "^0.7.2"
+    "@plugjs/plug": "^0.7.3"
   }
 }
