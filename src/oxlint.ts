@@ -88,11 +88,10 @@ export async function lint(
   paths: string[],
 ): Promise<void> {
   // Extract options with defaults
-  const { config, tsConfig, fix = false, reportUnusedDisableDirectives = true, cwd: maybeCwd } = options
+  const { config, tsConfig, fix = false, cwd: maybeCwd } = options
 
   // Build the command line arguments for OXLint
-  const args = ['--format=json', '--type-aware']
-  if (reportUnusedDisableDirectives) args.push(`--report-unused-disable-directives`)
+  const args = ['--format=json']
   if (fix) args.push(`--fix`)
 
   // OXLint is finicky with paths: for speed it never resolves symlinks, so

@@ -1,12 +1,15 @@
 import { defineConfig } from 'oxlint'
 
 export default defineConfig({
-  $schema: './node_modules/oxlint/configuration_schema.json',
   plugins: ['import', 'jsdoc', 'oxc', 'promise', 'typescript', 'unicorn'],
   env: {
     builtin: true,
     es2024: true,
     node: true,
+  },
+  options: {
+    typeAware: true,
+    reportUnusedDisableDirectives: 'warn',
   },
   rules: {
     'constructor-super': 'error',

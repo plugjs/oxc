@@ -16,8 +16,6 @@ export interface OXLintPlugOptions {
   tsConfig?: string
   /** Whether to automatically fix linting errors (default: `false`). */
   fix?: boolean
-  /** Whether to report unused disable directives (default: `true`). */
-  reportUnusedDisableDirectives?: boolean
   /** The current working directory for OXLint (default: the current one) */
   cwd?: string
 }
