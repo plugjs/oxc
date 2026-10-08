@@ -223,9 +223,8 @@ For example, an OXFmt configuration in another project can start from the defaul
 configuration like this:
 
 ```typescript
-import { defineConfig } from 'oxfmt'
-
 import config from '@plugjs/oxc/configs/oxfmt'
+import { defineConfig } from 'oxfmt'
 
 export default defineConfig({
   // OXFmt does not support an `extends` option, so spread the default config.
@@ -237,9 +236,8 @@ An OXLint configuration can import either the generic default configuration or
 the Node.js-specific one:
 
 ```typescript
-import { defineConfig } from 'oxlint'
-
 import config from '@plugjs/oxc/configs/oxlint.node'
+import { defineConfig } from 'oxlint'
 
 export default defineConfig({
   extends: [config],
